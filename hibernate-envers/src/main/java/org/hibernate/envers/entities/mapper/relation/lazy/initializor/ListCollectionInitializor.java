@@ -22,13 +22,14 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.entities.mapper.relation.lazy.initializor;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.entities.mapper.relation.MiddleComponentData;
 import org.hibernate.envers.entities.mapper.relation.query.RelationQueryGenerator;
 import org.hibernate.envers.reader.AuditReaderImplementor;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Initializes a map.
@@ -51,7 +52,7 @@ public class ListCollectionInitializor extends AbstractCollectionInitializor<Lis
     }
 
     @SuppressWarnings({"unchecked"})
-    protected List initializeCollection(int size) {
+	public List initializeCollection(int size) {
         // Creating a list of the given capacity with all elements null initially. This ensures that we can then
         // fill the elements safely using the <code>List.set</code> method.
         List list = new ArrayList(size);

@@ -22,16 +22,19 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.test.entities.components.relations;
-import java.util.HashSet;
-import java.util.Set;
+import org.hibernate.envers.Audited;
+import org.hibernate.envers.test.entities.StrTestEntity;
+
 import javax.persistence.Embeddable;
 import javax.persistence.OneToMany;
-import org.hibernate.envers.test.entities.StrTestEntity;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
 @Embeddable
+@Audited
 public class OneToManyComponent {
 	@OneToMany
     private Set<StrTestEntity> entities = new HashSet<StrTestEntity>();

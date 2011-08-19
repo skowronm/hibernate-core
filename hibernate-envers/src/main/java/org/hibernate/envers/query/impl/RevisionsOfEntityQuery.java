@@ -22,9 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.query.impl;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.configuration.AuditEntitiesConfiguration;
@@ -32,6 +29,10 @@ import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.query.criteria.AuditCriterion;
 import org.hibernate.envers.reader.AuditReaderImplementor;
 import org.hibernate.proxy.HibernateProxy;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -129,8 +130,7 @@ public class RevisionsOfEntityQuery extends AbstractAuditQuery {
                 }
 
                 Number revision = getRevisionNumber(versionsEntity);
-                
-                Object entity = entityInstantiator.createInstanceFromVersionsEntity(entityName, versionsEntity, revision);
+				Object entity = instantiateEntity(versionsEntity, revision);
 
                 if (!selectEntitiesOnly) {
                     entities.add(new Object[] { entity, revisionData, versionsEntity.get(revisionTypePropertyName) });

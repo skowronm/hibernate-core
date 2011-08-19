@@ -22,15 +22,17 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.entities;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
 import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.entities.mapper.id.IdMapper;
 import org.hibernate.envers.exception.AuditException;
+import org.hibernate.envers.query.propertyinitializer.CustomPropertyInitializers;
 import org.hibernate.envers.reader.AuditReaderImplementor;
 import org.hibernate.envers.tools.reflection.ReflectionTools;
 import org.hibernate.internal.util.ReflectHelper;
+
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -45,15 +47,21 @@ public class EntityInstantiator {
         this.versionsReader = versionsReader;
     }
 
-    /**
-     * Creates an entity instance based on an entry from the versions table.
+	public Object createInstanceFromVersionsEntity(String entityName, Map versionsEntity, Number revision) {
+		return createInstanceFromVersionsEntity(entityName, versionsEntity, revision, CustomPropertyInitializers.empty());
+	}
+
+	/**
+	 * Creates an entity instance based on an entry from the versions table.
      * @param entityName Name of the entity, which instances should be read
      * @param versionsEntity An entry in the versions table, from which data should be mapped.
      * @param revision Revision at which this entity was read.
+     * @param initializers Customized initialization information
      * @return An entity instance, with versioned properties set as in the versionsEntity map, and proxies
      * created for collections.
      */
-    public Object createInstanceFromVersionsEntity(String entityName, Map versionsEntity, Number revision) {
+	public Object createInstanceFromVersionsEntity(String entityName, Map versionsEntity, Number revision,
+												   CustomPropertyInitializers initializers) {
         if (versionsEntity == null) {
             return null;
         }
@@ -68,47 +76,91 @@ public class EntityInstantiator {
         // First mapping the primary key
         IdMapper idMapper = verCfg.getEntCfg().get(entityName).getIdMapper();
         Map originalId = (Map) versionsEntity.get(verCfg.getAuditEntCfg().getOriginalIdPropName());
-
         Object primaryKey = idMapper.mapToIdFromMap(originalId);
 
-        // Checking if the entity is in cache
-        if (versionsReader.getFirstLevelCache().contains(entityName, revision, primaryKey)) {
-            return versionsReader.getFirstLevelCache().get(entityName, revision, primaryKey);
-        }
+		if (!initializers.hasInitializers()) {
+			// Checking if the entity is in cache
+			Object cachedVersion = getCachedEntity(entityName, revision, primaryKey);
 
-        // If it is not in the cache, creating a new entity instance
-        Object ret;
-        try {
-        	EntityConfiguration entCfg = verCfg.getEntCfg().get(entityName);
-        	if(entCfg == null) {
-        		// a relation marked as RelationTargetAuditMode.NOT_AUDITED 
-        		entCfg = verCfg.getEntCfg().getNotVersionEntityConfiguration(entityName);
-        	}
-
-            Class<?> cls = ReflectionTools.loadClass(entCfg.getEntityClassName());
-            ret = ReflectHelper.getDefaultConstructor(cls).newInstance();
-        } catch (Exception e) {
-            throw new AuditException(e);
-        }
-
-        // Putting the newly created entity instance into the first level cache, in case a one-to-one bidirectional
-        // relation is present (which is eagerly loaded).
-        versionsReader.getFirstLevelCache().put(entityName, revision, primaryKey, ret);
-
-        verCfg.getEntCfg().get(entityName).getPropertyMapper().mapToEntityFromMap(verCfg, ret, versionsEntity, primaryKey,
-                versionsReader, revision);
-        idMapper.mapToEntityFromMap(ret, originalId);
-
-        // Put entity on entityName cache after mapping it from the map representation
-        versionsReader.getFirstLevelCache().putOnEntityNameCache(primaryKey, revision, ret, entityName);
-        
-        return ret;
+			if (cachedVersion != null) {
+				return cachedVersion;
+			}
+			return initializeInstance(entityName, versionsEntity, revision, idMapper, originalId, primaryKey);
+		} else {
+			return initializeCustomizedInstance(entityName, versionsEntity, revision, idMapper, originalId,
+					primaryKey, initializers);
+		}
     }
 
-    @SuppressWarnings({"unchecked"})
-    public void addInstancesFromVersionsEntities(String entityName, Collection addTo, List<Map> versionsEntities, Number revision) {
+	private Object initializeInstance(String entityName, Map versionsEntity, Number revision,
+									  IdMapper idMapper, Map originalId, Object primaryKey) {
+		// If it is not in the cache, creating a new entity instance
+		Object ret = createNewInstance(entityName);
+
+		// Putting the newly created entity instance into the first level cache, in case a one-to-one bidirectional
+		// relation is present (which is eagerly loaded).
+		versionsReader.getFirstLevelCache().put(entityName, revision, primaryKey, ret);
+
+		verCfg.getEntCfg().get(entityName).getPropertyMapper().mapToEntityFromMap(verCfg, ret, versionsEntity, primaryKey,
+				versionsReader, revision, CustomPropertyInitializers.empty());
+		idMapper.mapToEntityFromMap(ret, originalId);
+
+		// Put entity on entityName cache after mapping it from the map representation
+		versionsReader.getFirstLevelCache().putOnEntityNameCache(primaryKey, revision, ret, entityName);
+		return ret;
+	}
+
+	private Object initializeCustomizedInstance(String entityName, Map versionsEntity, Number revision,
+												IdMapper idMapper, Map originalId, Object primaryKey,
+												CustomPropertyInitializers initializers) {
+		// Creating a new entity instance
+		Object ret = createNewInstance(entityName);
+
+		// Putting the newly created entity instance into the first level cache, in case a one-to-one bidirectional
+		// relation is present (which is eagerly loaded).
+		Object cachedVersion = versionsReader.getFirstLevelCache().put(entityName, revision, primaryKey, ret);
+
+		verCfg.getEntCfg().get(entityName).getPropertyMapper().mapToEntityFromMap(verCfg, ret, versionsEntity, primaryKey,
+				versionsReader, revision, initializers);
+		idMapper.mapToEntityFromMap(ret, originalId);
+
+		if (cachedVersion != null) {
+			versionsReader.getFirstLevelCache().put(entityName, revision, primaryKey, cachedVersion);
+		} else {
+			versionsReader.getFirstLevelCache().remove(entityName, revision, primaryKey);
+		}
+		return ret;
+	}
+
+	private Object createNewInstance(String entityName) {
+		Object ret;
+		try {
+			EntityConfiguration entCfg = verCfg.getEntCfg().get(entityName);
+			if(entCfg == null) {
+				// a relation marked as RelationTargetAuditMode.NOT_AUDITED
+				entCfg = verCfg.getEntCfg().getNotVersionEntityConfiguration(entityName);
+			}
+
+			Class<?> cls = ReflectionTools.loadClass(entCfg.getEntityClassName());
+			ret = ReflectHelper.getDefaultConstructor(cls).newInstance();
+		} catch (Exception e) {
+			throw new AuditException(e);
+		}
+		return ret;
+	}
+
+	private Object getCachedEntity(String entityName, Number revision, Object primaryKey) {
+		if (versionsReader.getFirstLevelCache().contains(entityName, revision, primaryKey)) {
+			return versionsReader.getFirstLevelCache().get(entityName, revision, primaryKey);
+		}
+		return null;
+	}
+
+	@SuppressWarnings({"unchecked"})
+    public void addInstancesFromVersionsEntities(String entityName, Collection addTo, List<Map> versionsEntities,
+												 Number revision, CustomPropertyInitializers initializers) {
         for (Map versionsEntity : versionsEntities) {
-            addTo.add(createInstanceFromVersionsEntity(entityName, versionsEntity, revision));
+            addTo.add(createInstanceFromVersionsEntity(entityName, versionsEntity, revision, initializers));
         }
     }
 }

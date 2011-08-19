@@ -22,15 +22,8 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.query.impl;
-import java.util.ArrayList;
-import java.util.List;
-import javax.persistence.NoResultException;
-import javax.persistence.NonUniqueResultException;
-import org.hibernate.CacheMode;
-import org.hibernate.FlushMode;
-import org.hibernate.LockMode;
-import org.hibernate.LockOptions;
-import org.hibernate.Query;
+
+import org.hibernate.*;
 import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.entities.EntityInstantiator;
 import org.hibernate.envers.exception.AuditException;
@@ -38,10 +31,19 @@ import org.hibernate.envers.query.AuditQuery;
 import org.hibernate.envers.query.criteria.AuditCriterion;
 import org.hibernate.envers.query.order.AuditOrder;
 import org.hibernate.envers.query.projection.AuditProjection;
+import org.hibernate.envers.query.propertyinitializer.AuditPropertyInitializer;
+import org.hibernate.envers.query.propertyinitializer.CustomPropertyInitializers;
+import org.hibernate.envers.query.propertyinitializer.PropertyInitializer;
 import org.hibernate.envers.reader.AuditReaderImplementor;
 import org.hibernate.envers.tools.Pair;
 import org.hibernate.envers.tools.Triple;
 import org.hibernate.envers.tools.query.QueryBuilder;
+
+import javax.persistence.NoResultException;
+import javax.persistence.NonUniqueResultException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -49,7 +51,8 @@ import org.hibernate.envers.tools.query.QueryBuilder;
  */
 public abstract class AbstractAuditQuery implements AuditQuery {
     protected EntityInstantiator entityInstantiator;
-    protected List<AuditCriterion> criterions;
+	private CustomPropertyInitializers customInitializers;
+	protected List<AuditCriterion> criterions;
 
     protected String entityName;
     protected String entityClassName;
@@ -73,6 +76,7 @@ public abstract class AbstractAuditQuery implements AuditQuery {
 		this.versionsReader = versionsReader;
 
 		criterions = new ArrayList<AuditCriterion>();
+		customInitializers = new CustomPropertyInitializers();
 		entityInstantiator = new EntityInstantiator(verCfg, versionsReader);
 
 		entityClassName = cls.getName();
@@ -94,6 +98,16 @@ public abstract class AbstractAuditQuery implements AuditQuery {
 
         return query.list();
     }
+
+	protected List instantiateEntities(List<Map> queryResult, Number revision){
+		List result = new ArrayList();
+		entityInstantiator.addInstancesFromVersionsEntities(entityName, result, queryResult, revision, customInitializers);
+		return result;
+	}
+
+	protected Object instantiateEntity(Map queryResult, Number revision){
+		return entityInstantiator.createInstanceFromVersionsEntity(entityName, queryResult, revision, customInitializers);
+	}
 
     public abstract List list() throws AuditException;
 
@@ -136,6 +150,13 @@ public abstract class AbstractAuditQuery implements AuditQuery {
         qb.addOrder(orderData.getFirst(), orderData.getSecond());
         return this;
     }
+
+	// Property value customInitializers
+	public AuditQuery initialize(AuditPropertyInitializer propertyInitializer) {
+		Pair<String, PropertyInitializer> data = propertyInitializer.getInitializerData(verCfg);
+		customInitializers.addInitializer(data.getFirst(), data.getSecond());
+		return this;
+	}
 
     // Query properties
 

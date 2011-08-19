@@ -52,7 +52,7 @@ public class SortedMapCollectionInitializor extends MapCollectionInitializor<Sor
 		this.comparator = comparator;
 	}
 
-	protected SortedMap initializeCollection(int size) {
+	public SortedMap initializeCollection(int size) {
 		if (comparator == null) {
 			return super.initializeCollection(size);
 		}

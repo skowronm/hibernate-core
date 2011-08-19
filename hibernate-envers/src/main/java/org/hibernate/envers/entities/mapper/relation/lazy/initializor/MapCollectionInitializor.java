@@ -55,7 +55,7 @@ public class MapCollectionInitializor<T extends Map> extends AbstractCollectionI
         this.indexComponentData = indexComponentData;
     }
 
-    protected T initializeCollection(int size) {
+    public T initializeCollection(int size) {
         try {
             return collectionClass.newInstance();
         } catch (InstantiationException e) {

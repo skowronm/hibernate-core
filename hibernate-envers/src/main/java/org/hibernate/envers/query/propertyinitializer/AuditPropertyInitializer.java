@@ -21,13 +21,18 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.envers.entities.mapper.relation.lazy.initializor;
+package org.hibernate.envers.query.propertyinitializer;
 
+import org.hibernate.envers.configuration.AuditConfiguration;
+import org.hibernate.envers.tools.Pair;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public interface Initializor<T> {
-	T initializeCollection(int size);
-    T initialize();
+public interface AuditPropertyInitializer {
+    /**
+     * @param auditCfg Configuration.
+     * @return A triple: (function name - possibly null, property name, add distinct?).
+     */
+    Pair<String, PropertyInitializer> getInitializerData(AuditConfiguration auditCfg);
 }

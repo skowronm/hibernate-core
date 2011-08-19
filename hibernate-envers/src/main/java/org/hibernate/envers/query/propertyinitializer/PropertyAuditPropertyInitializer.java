@@ -21,13 +21,28 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.envers.entities.mapper.relation.lazy.initializor;
 
+package org.hibernate.envers.query.propertyinitializer;
+
+import org.hibernate.envers.configuration.AuditConfiguration;
+import org.hibernate.envers.query.property.PropertyNameGetter;
+import org.hibernate.envers.tools.Pair;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public interface Initializor<T> {
-	T initializeCollection(int size);
-    T initialize();
+public class PropertyAuditPropertyInitializer implements AuditPropertyInitializer {
+    private final PropertyNameGetter propertyNameGetter;
+	private final PropertyInitializer propertyInitializer;
+
+    public PropertyAuditPropertyInitializer(PropertyNameGetter propertyNameGetter, PropertyInitializer propertyInitializer) {
+        this.propertyNameGetter = propertyNameGetter;
+		this.propertyInitializer = propertyInitializer;
+    }
+
+    public Pair<String, PropertyInitializer> getInitializerData(AuditConfiguration auditCfg) {
+        String propertyName = propertyNameGetter.get(auditCfg);
+
+        return Pair.make(propertyName, propertyInitializer);
+    }
 }

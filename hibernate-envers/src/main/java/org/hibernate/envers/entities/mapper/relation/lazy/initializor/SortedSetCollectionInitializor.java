@@ -47,7 +47,7 @@ public class SortedSetCollectionInitializor extends BasicCollectionInitializor<S
 	}
 
 	@Override
-	protected SortedSet initializeCollection(int size) {
+	public SortedSet initializeCollection(int size) {
 		if (comparator == null) {
 			return super.initializeCollection(size);
 		}

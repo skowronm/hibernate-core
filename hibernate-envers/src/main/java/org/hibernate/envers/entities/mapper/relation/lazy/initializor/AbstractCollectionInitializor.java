@@ -22,11 +22,12 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.entities.mapper.relation.lazy.initializor;
-import java.util.List;
 import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.entities.EntityInstantiator;
 import org.hibernate.envers.entities.mapper.relation.query.RelationQueryGenerator;
 import org.hibernate.envers.reader.AuditReaderImplementor;
+
+import java.util.List;
 
 /**
  * Initializes a persistent collection.
@@ -51,8 +52,6 @@ public abstract class AbstractCollectionInitializor<T> implements Initializor<T>
 
         entityInstantiator = new EntityInstantiator(verCfg, versionsReader);
     }
-
-    protected abstract T initializeCollection(int size);
 
     protected abstract void addToCollection(T collection, Object collectionRow);
 

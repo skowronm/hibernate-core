@@ -24,6 +24,7 @@
 package org.hibernate.envers.test.integration.collection;
 
 import org.hibernate.ejb.Ejb3Configuration;
+import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.collection.EnumSetEntity;
@@ -34,6 +35,7 @@ import org.junit.Test;
 
 import javax.persistence.EntityManager;
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -106,4 +108,14 @@ public class EnumSet extends AbstractEntityTest {
         assert rev2.getEnums2().equals(TestTools.makeSet(E2.A));
         assert rev3.getEnums2().equals(TestTools.makeSet(E2.A));
     }
+
+	@Test
+	public void testCustomInitialization() throws Exception {
+		List list = getAuditReader().createQuery()
+				.forRevisionsOfEntity(EnumSetEntity.class, true, false)
+				.add(AuditEntity.id().eq(sse1_id))
+//				.initialize(AuditEntity.property("enums1").withEmptyCollection())
+				.initialize(AuditEntity.property("enums2").withEmptyCollection())
+				.getResultList();
+	}
 }

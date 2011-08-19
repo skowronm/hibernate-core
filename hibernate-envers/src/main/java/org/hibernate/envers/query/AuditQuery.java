@@ -22,9 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.query;
-import java.util.List;
-import javax.persistence.NoResultException;
-import javax.persistence.NonUniqueResultException;
+
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.LockMode;
@@ -32,6 +30,11 @@ import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.query.criteria.AuditCriterion;
 import org.hibernate.envers.query.order.AuditOrder;
 import org.hibernate.envers.query.projection.AuditProjection;
+import org.hibernate.envers.query.propertyinitializer.AuditPropertyInitializer;
+
+import javax.persistence.NoResultException;
+import javax.persistence.NonUniqueResultException;
+import java.util.List;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -47,6 +50,8 @@ public interface AuditQuery {
     AuditQuery addProjection(AuditProjection projection);
 
     AuditQuery addOrder(AuditOrder order);
+
+	AuditQuery initialize(AuditPropertyInitializer propertyInitializer);
 
     AuditQuery setMaxResults(int maxResults);
 

@@ -24,6 +24,7 @@
 package org.hibernate.envers.test.integration.collection;
 
 import org.hibernate.ejb.Ejb3Configuration;
+import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.collection.StringListEntity;
@@ -33,6 +34,7 @@ import org.junit.Test;
 import javax.persistence.EntityManager;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -122,4 +124,13 @@ public class StringList extends AbstractEntityTest {
         assert rev2.getStrings().equals(TestTools.makeList("sle2_string1", "sle2_string2", "sle2_string1"));
         assert rev3.getStrings().equals(TestTools.makeList("sle2_string2", "sle2_string1"));
     }
+
+	@Test
+	public void testCustomInitialization() throws Exception {
+		List list = getAuditReader().createQuery()
+				.forRevisionsOfEntity(StringListEntity.class, true, false)
+				.add(AuditEntity.id().eq(sle2_id))
+				.initialize(AuditEntity.property("strings").withEmptyCollection())
+				.getResultList();
+	}
 }

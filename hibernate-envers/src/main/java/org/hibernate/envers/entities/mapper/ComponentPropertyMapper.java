@@ -22,18 +22,20 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.entities.mapper;
-import java.io.Serializable;
-import java.util.List;
-import java.util.Map;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.entities.PropertyData;
 import org.hibernate.envers.exception.AuditException;
+import org.hibernate.envers.query.propertyinitializer.CustomPropertyInitializers;
 import org.hibernate.envers.reader.AuditReaderImplementor;
 import org.hibernate.envers.tools.reflection.ReflectionTools;
-import org.hibernate.property.Setter;
 import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.property.Setter;
+
+import java.io.Serializable;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -65,12 +67,20 @@ public class ComponentPropertyMapper implements PropertyMapper, CompositeMapperB
         return delegate.mapToMapFromEntity(session, data, newObj, oldObj);
     }
 
-    public void mapToEntityFromMap(AuditConfiguration verCfg, Object obj, Map data, Object primaryKey, AuditReaderImplementor versionsReader, Number revision) {
+	public void mapToEntityFromMap(AuditConfiguration verCfg, Object obj, Map data, Object primaryKey,
+								   AuditReaderImplementor versionsReader, Number revision,
+								   CustomPropertyInitializers initializers) {
         if (data == null || obj == null) {
             return;
         }
 
         Setter setter = ReflectionTools.getSetter(obj.getClass(), propertyData);
+
+		if (initializers.canInitialize(propertyData)) {
+			setter.set(obj, initializers.initialize(propertyData,
+					ReflectionTools.loadClass(componentClassName)), null);
+			return;
+		}
 
 		// If all properties are null and single, then the component has to be null also.
 		boolean allNullAndSingle = true;
@@ -90,7 +100,7 @@ public class ComponentPropertyMapper implements PropertyMapper, CompositeMapperB
 				Object subObj = ReflectHelper.getDefaultConstructor(
 						Thread.currentThread().getContextClassLoader().loadClass(componentClassName)).newInstance();
 				setter.set(obj, subObj, null);
-				delegate.mapToEntityFromMap(verCfg, subObj, data, primaryKey, versionsReader, revision);
+				delegate.mapToEntityFromMap(verCfg, subObj, data, primaryKey, versionsReader, revision, initializers);
 			} catch (Exception e) {
 				throw new AuditException(e);
 			}

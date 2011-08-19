@@ -23,7 +23,7 @@
  */
 
 package org.hibernate.envers.query.criteria;
-import java.util.Collection;
+
 import org.hibernate.criterion.MatchMode;
 import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.query.order.AuditOrder;
@@ -31,14 +31,23 @@ import org.hibernate.envers.query.order.PropertyAuditOrder;
 import org.hibernate.envers.query.projection.AuditProjection;
 import org.hibernate.envers.query.projection.PropertyAuditProjection;
 import org.hibernate.envers.query.property.PropertyNameGetter;
+import org.hibernate.envers.query.propertyinitializer.AuditPropertyInitializer;
+import org.hibernate.envers.query.propertyinitializer.PropertyAuditPropertyInitializer;
+import org.hibernate.envers.query.propertyinitializer.PropertyInitializer;
+import org.hibernate.envers.query.propertyinitializer.impl.EmptyCollectionPropertyInitializer;
+import org.hibernate.envers.query.propertyinitializer.impl.NullPropertyInitializer;
+import org.hibernate.envers.query.propertyinitializer.impl.ValuePropertyInitializer;
+import org.hibernate.envers.tools.Pair;
 import org.hibernate.envers.tools.Triple;
+
+import java.util.Collection;
 
 /**
  * Create restrictions, projections and specify order for a property of an audited entity.
  * @author Adam Warski (adam at warski dot org)
  */
 @SuppressWarnings({"JavaDoc"})
-public class AuditProperty<T> implements AuditProjection {
+public class AuditProperty<T> implements AuditProjection, AuditPropertyInitializer {
     private final PropertyNameGetter propertyNameGetter;
 
     public AuditProperty(PropertyNameGetter propertyNameGetter) {
@@ -240,13 +249,31 @@ public class AuditProperty<T> implements AuditProjection {
         return new PropertyAuditProjection(propertyNameGetter, functionName, false);
     }
 
+	// Custom property initializers
+	public AuditPropertyInitializer with(Object value) {
+		return new PropertyAuditPropertyInitializer(propertyNameGetter, new ValuePropertyInitializer(value));
+	}
+
+	public AuditPropertyInitializer withNull() {
+		return new PropertyAuditPropertyInitializer(propertyNameGetter, new NullPropertyInitializer());
+	}
+
+    public AuditPropertyInitializer withEmptyCollection() {
+		return new PropertyAuditPropertyInitializer(propertyNameGetter, new EmptyCollectionPropertyInitializer());
+	}
+
     // Projection on this property
 
     public Triple<String, String, Boolean> getData(AuditConfiguration auditCfg) {
         return Triple.make(null, propertyNameGetter.get(auditCfg), false);
     }
 
-    // Order
+	@Override
+	public Pair<String, PropertyInitializer> getInitializerData(AuditConfiguration auditCfg) {
+		return Pair.make(propertyNameGetter.get(auditCfg), (PropertyInitializer) new NullPropertyInitializer());
+	}
+
+	// Order
 
     /**
      * Sort the results by the property in ascending order

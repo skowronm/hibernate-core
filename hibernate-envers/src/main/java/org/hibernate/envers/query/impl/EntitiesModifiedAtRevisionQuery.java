@@ -6,7 +6,6 @@ import org.hibernate.envers.configuration.AuditEntitiesConfiguration;
 import org.hibernate.envers.query.criteria.AuditCriterion;
 import org.hibernate.envers.reader.AuditReaderImplementor;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -54,10 +53,7 @@ public class EntitiesModifiedAtRevisionQuery extends AbstractAuditQuery {
         if (hasProjection) {
             return queryResult;
         } else {
-            List result = new ArrayList();
-            entityInstantiator.addInstancesFromVersionsEntities(entityName, result, queryResult, revision);
-
-            return result;
+			return instantiateEntities(queryResult, revision);
         }
     }
 }

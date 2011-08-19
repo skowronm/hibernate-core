@@ -22,10 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.entities.mapper.relation;
-import java.io.Serializable;
-import java.util.List;
-import java.util.Map;
-import javax.persistence.NoResultException;
 import org.hibernate.NonUniqueResultException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -36,9 +32,15 @@ import org.hibernate.envers.entities.mapper.PersistentCollectionChangeData;
 import org.hibernate.envers.entities.mapper.PropertyMapper;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.query.AuditEntity;
+import org.hibernate.envers.query.propertyinitializer.CustomPropertyInitializers;
 import org.hibernate.envers.reader.AuditReaderImplementor;
 import org.hibernate.envers.tools.reflection.ReflectionTools;
 import org.hibernate.property.Setter;
+
+import javax.persistence.NoResultException;
+import java.io.Serializable;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -60,8 +62,10 @@ public class OneToOneNotOwningMapper implements PropertyMapper {
         return false;
     }
 
-    public void mapToEntityFromMap(AuditConfiguration verCfg, Object obj, Map data, Object primaryKey, AuditReaderImplementor versionsReader, Number revision) {
-        if (obj == null) {
+	public void mapToEntityFromMap(AuditConfiguration verCfg, Object obj, Map data, Object primaryKey,
+								   AuditReaderImplementor versionsReader, Number revision,
+								   CustomPropertyInitializers initializers) {
+		if (obj == null) {
             return;
         }
 
@@ -75,16 +79,19 @@ public class OneToOneNotOwningMapper implements PropertyMapper {
 
         Object value;
 
-        try {
-            value = versionsReader.createQuery().forEntitiesAtRevision(entityClass, owningEntityName, revision)
-                    .add(AuditEntity.relatedId(owningReferencePropertyName).eq(primaryKey)).getSingleResult();
-        } catch (NoResultException e) {
-            value = null;
-        } catch (NonUniqueResultException e) {
-            throw new AuditException("Many versions results for one-to-one relationship: (" + owningEntityName +
-                    ", " + owningReferencePropertyName + ")");
-        }
-
+		if (initializers.canInitialize(propertyData)) {
+			value = initializers.initialize(propertyData, entityClass);
+		} else {
+			try {
+				value = versionsReader.createQuery().forEntitiesAtRevision(entityClass, owningEntityName, revision)
+						.add(AuditEntity.relatedId(owningReferencePropertyName).eq(primaryKey)).getSingleResult();
+			} catch (NoResultException e) {
+				value = null;
+			} catch (NonUniqueResultException e) {
+				throw new AuditException("Many versions results for one-to-one relationship: (" + owningEntityName +
+						", " + owningReferencePropertyName + ")");
+			}
+		}
         Setter setter = ReflectionTools.getSetter(obj.getClass(), propertyData);
         setter.set(obj, value, null);
     }

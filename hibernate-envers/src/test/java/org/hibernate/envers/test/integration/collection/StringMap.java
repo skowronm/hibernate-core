@@ -24,6 +24,7 @@
 package org.hibernate.envers.test.integration.collection;
 
 import org.hibernate.ejb.Ejb3Configuration;
+import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.collection.StringMapEntity;
@@ -33,6 +34,7 @@ import org.junit.Test;
 import javax.persistence.EntityManager;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -133,4 +135,13 @@ public class StringMap extends AbstractEntityTest {
         assert rev3.getStrings().equals(TestTools.makeMap("1", "b"));
         assert rev4.getStrings().equals(TestTools.makeMap("1", "b"));
     }
+
+	@Test
+	public void testCustomInitialization() throws Exception {
+		List list = getAuditReader().createQuery()
+				.forRevisionsOfEntity(StringMapEntity.class, true, false)
+				.add(AuditEntity.id().eq(sme2_id))
+				.initialize(AuditEntity.property("strings").withEmptyCollection())
+				.getResultList();
+	}
 }

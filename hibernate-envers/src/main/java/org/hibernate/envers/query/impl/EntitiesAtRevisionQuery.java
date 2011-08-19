@@ -22,9 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.query.impl;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+
 import org.hibernate.Query;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.configuration.AuditConfiguration;
@@ -32,6 +30,9 @@ import org.hibernate.envers.configuration.AuditEntitiesConfiguration;
 import org.hibernate.envers.entities.mapper.relation.MiddleIdData;
 import org.hibernate.envers.query.criteria.AuditCriterion;
 import org.hibernate.envers.reader.AuditReaderImplementor;
+
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -104,10 +105,7 @@ public class EntitiesAtRevisionQuery extends AbstractAuditQuery {
         if (hasProjection) {
             return queryResult;
         } else {
-            List result = new ArrayList();
-            entityInstantiator.addInstancesFromVersionsEntities(entityName, result, queryResult, revision);
-
-            return result;
+			return instantiateEntities(queryResult, revision);
         }
     }
 }

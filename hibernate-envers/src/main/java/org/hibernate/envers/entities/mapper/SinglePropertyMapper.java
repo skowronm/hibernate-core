@@ -22,20 +22,22 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.entities.mapper;
-import java.io.Serializable;
-import java.util.List;
-import java.util.Map;
 import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.entities.PropertyData;
 import org.hibernate.envers.exception.AuditException;
+import org.hibernate.envers.query.propertyinitializer.CustomPropertyInitializers;
 import org.hibernate.envers.reader.AuditReaderImplementor;
 import org.hibernate.envers.tools.Tools;
 import org.hibernate.envers.tools.reflection.ReflectionTools;
 import org.hibernate.property.DirectPropertyAccessor;
 import org.hibernate.property.Setter;
+
+import java.io.Serializable;
+import java.util.List;
+import java.util.Map;
 
 /**
  * TODO: diff
@@ -64,14 +66,20 @@ public class SinglePropertyMapper implements PropertyMapper, SimpleMapperBuilder
         return !Tools.objectsEqual(newObj, oldObj);
     }
 
-    public void mapToEntityFromMap(AuditConfiguration verCfg, Object obj, Map data, Object primaryKey,
-                                   AuditReaderImplementor versionsReader, Number revision) {
+	public void mapToEntityFromMap(AuditConfiguration verCfg, Object obj, Map data, Object primaryKey,
+								   AuditReaderImplementor versionsReader, Number revision,
+								   CustomPropertyInitializers initializers) {
         if (data == null || obj == null) {
             return;
         }
 
-        Setter setter = ReflectionTools.getSetter(obj.getClass(), propertyData);
-		Object value = data.get(propertyData.getName());
+		Object value;
+		if (initializers.canInitialize(propertyData)) {
+			value = initializers.initialize(propertyData, data.get(propertyData.getName()).getClass());
+		} else{
+			value = data.get(propertyData.getName());
+		}
+		Setter setter = ReflectionTools.getSetter(obj.getClass(), propertyData);
 		// We only set a null value if the field is not primite. Otherwise, we leave it intact.
 		if (value != null || !isPrimitive(setter, propertyData, obj.getClass())) {
         	setter.set(obj, value, null);

@@ -22,12 +22,14 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.reader;
-import static org.hibernate.envers.tools.Tools.newHashMap;
-import static org.hibernate.envers.tools.Triple.make;
-import java.util.Map;
 import org.hibernate.envers.internal.EnversMessageLogger;
 import org.hibernate.envers.tools.Triple;
 import org.jboss.logging.Logger;
+
+import java.util.Map;
+
+import static org.hibernate.envers.tools.Tools.newHashMap;
+import static org.hibernate.envers.tools.Triple.make;
 
 /**
  * First level cache for versioned entities, versions reader-scoped. Each entity is uniquely identified by a
@@ -59,9 +61,9 @@ public class FirstLevelCache {
         return cache.get(make(entityName, revision, id));
     }
 
-    public void put(String entityName, Number revision, Object id, Object entity) {
+    public Object put(String entityName, Number revision, Object id, Object entity) {
         LOG.debugf("Caching entity on First Level Cache:  - primaryKey:%s - revision:%s - entityName:%s", id, revision, entityName);
-        cache.put(make(entityName, revision, id), entity);
+        return cache.put(make(entityName, revision, id), entity);
     }
 
     public boolean contains(String entityName, Number revision, Object id) {
@@ -86,7 +88,6 @@ public class FirstLevelCache {
 
     /**
      * Gets the entityName from the cache. The key is a triple make with primaryKey, revision and entity
-     * @param entityName, value of the cache
      * @param id, primaryKey
      * @param revision, revision number
      * @param entity, object retrieved by envers
@@ -111,4 +112,12 @@ public class FirstLevelCache {
     public boolean containsEntityName(Object id, Number revision, Object entity) {
     	return entityNameCache.containsKey(make(id, revision, entity));
     }
+
+	public void remove(String entityName, Number revision, Object primaryKey) {
+		LOG.debugf("Removing entity from First Level Cache:  - primaryKey:%s - revision:%s - entityName:%s",
+                   primaryKey,
+                   revision,
+                   entityName);
+		cache.remove(make(entityName, revision, primaryKey));
+	}
 }

@@ -32,6 +32,7 @@ import org.hibernate.envers.entities.mapper.PersistentCollectionChangeData;
 import org.hibernate.envers.entities.mapper.PropertyMapper;
 import org.hibernate.envers.entities.mapper.id.IdMapper;
 import org.hibernate.envers.entities.mapper.relation.lazy.ToOneDelegateSessionImplementor;
+import org.hibernate.envers.query.propertyinitializer.CustomPropertyInitializers;
 import org.hibernate.envers.reader.AuditReaderImplementor;
 import org.hibernate.envers.tools.Tools;
 import org.hibernate.envers.tools.reflection.ReflectionTools;
@@ -75,34 +76,38 @@ public class ToOneIdMapper implements PropertyMapper {
         return nonInsertableFake ? false : !Tools.entitiesEqual(session, referencedEntityName, newObj, oldObj);
     }
 
-    public void mapToEntityFromMap(AuditConfiguration verCfg, Object obj, Map data, Object primaryKey,
-                                   AuditReaderImplementor versionsReader, Number revision) {
+	public void mapToEntityFromMap(AuditConfiguration verCfg, Object obj, Map data, Object primaryKey,
+								   AuditReaderImplementor versionsReader, Number revision,
+								   CustomPropertyInitializers initializers) {
         if (obj == null) {
             return;
         }
 
-		Object entityId;
-		entityId = delegate.mapToIdFromMap(data);
-        Object value;
-        if (entityId == null) {
-            value = null;
-        } else {
-            if (versionsReader.getFirstLevelCache().contains(referencedEntityName, revision, entityId)) {
-                value = versionsReader.getFirstLevelCache().get(referencedEntityName, revision, entityId);
-            } else {
-            	EntityConfiguration entCfg = verCfg.getEntCfg().get(referencedEntityName);
-            	if(entCfg == null) {
-            		// a relation marked as RelationTargetAuditMode.NOT_AUDITED
-            		entCfg = verCfg.getEntCfg().getNotVersionEntityConfiguration(referencedEntityName);
-            	}
+		EntityConfiguration entCfg = verCfg.getEntCfg().get(referencedEntityName);
+		if (entCfg == null) {
+			// a relation marked as RelationTargetAuditMode.NOT_AUDITED
+			entCfg = verCfg.getEntCfg().getNotVersionEntityConfiguration(referencedEntityName);
+		}
+		Class<?> entityClass = ReflectionTools.loadClass(entCfg.getEntityClassName());
 
-                Class<?> entityClass = ReflectionTools.loadClass(entCfg.getEntityClassName());
+		Object value;
 
-                value = versionsReader.getSessionImplementor().getFactory().getEntityPersister(referencedEntityName).
-                        createProxy((Serializable)entityId, new ToOneDelegateSessionImplementor(versionsReader, entityClass, entityId, revision, verCfg));
-            }
-        }
-
+		if (initializers.canInitialize(propertyData)) {
+			value = initializers.initialize(propertyData, entityClass);
+		} else {
+			Object entityId;
+			entityId = delegate.mapToIdFromMap(data);
+			if (entityId == null) {
+				value = null;
+			} else {
+				if (versionsReader.getFirstLevelCache().contains(referencedEntityName, revision, entityId)) {
+					value = versionsReader.getFirstLevelCache().get(referencedEntityName, revision, entityId);
+				} else {
+					value = versionsReader.getSessionImplementor().getFactory().getEntityPersister(referencedEntityName).
+							createProxy((Serializable) entityId, new ToOneDelegateSessionImplementor(versionsReader, entityClass, entityId, revision, verCfg));
+				}
+			}
+		}
         Setter setter = ReflectionTools.getSetter(obj.getClass(), propertyData);
         setter.set(obj, value, null);
     }

@@ -53,7 +53,7 @@ public class BasicCollectionInitializor<T extends Collection> extends AbstractCo
         this.elementComponentData = elementComponentData;
     }
 
-    protected T initializeCollection(int size) {
+    public T initializeCollection(int size) {
         try {
             return collectionClass.newInstance();
         } catch (InstantiationException e) {

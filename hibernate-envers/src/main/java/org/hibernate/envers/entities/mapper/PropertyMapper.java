@@ -22,13 +22,15 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.entities.mapper;
-import java.io.Serializable;
-import java.util.List;
-import java.util.Map;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.configuration.AuditConfiguration;
+import org.hibernate.envers.query.propertyinitializer.CustomPropertyInitializers;
 import org.hibernate.envers.reader.AuditReaderImplementor;
+
+import java.io.Serializable;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -54,7 +56,8 @@ public interface PropertyMapper {
      * @param revision Revision at which the object is read, for reading relations
      */
     void mapToEntityFromMap(AuditConfiguration verCfg, Object obj, Map data, Object primaryKey,
-                            AuditReaderImplementor versionsReader, Number revision);
+                            AuditReaderImplementor versionsReader, Number revision,
+							CustomPropertyInitializers initializers);
 
     /**
      * Maps collection changes

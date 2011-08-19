@@ -57,4 +57,6 @@ public @interface Audited {
      * will also be audited.
      */
     Class[] auditParents() default {};
+
+	boolean usingCustomInitialization() default true;
 }

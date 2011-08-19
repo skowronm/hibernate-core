@@ -22,27 +22,24 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.entities.mapper.relation;
-import java.io.Serializable;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.configuration.AuditConfiguration;
+import org.hibernate.envers.entities.PropertyData;
 import org.hibernate.envers.entities.mapper.PersistentCollectionChangeData;
 import org.hibernate.envers.entities.mapper.PropertyMapper;
 import org.hibernate.envers.entities.mapper.relation.lazy.initializor.Initializor;
 import org.hibernate.envers.exception.AuditException;
+import org.hibernate.envers.query.propertyinitializer.CustomPropertyInitializers;
 import org.hibernate.envers.reader.AuditReaderImplementor;
 import org.hibernate.envers.tools.reflection.ReflectionTools;
 import org.hibernate.property.Setter;
+
+import java.io.Serializable;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.util.*;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -136,18 +133,25 @@ public abstract class AbstractCollectionMapper<T> implements PropertyMapper {
                                                      AuditReaderImplementor versionsReader, Object primaryKey,
                                                      Number revision);
 
-    public void mapToEntityFromMap(AuditConfiguration verCfg, Object obj, Map data, Object primaryKey,
-                                   AuditReaderImplementor versionsReader, Number revision) {
-        Setter setter = ReflectionTools.getSetter(obj.getClass(),
-                commonCollectionMapperData.getCollectionReferencingPropertyData());
-        try {
-            setter.set(obj, proxyConstructor.newInstance(getInitializor(verCfg, versionsReader, primaryKey, revision)), null);
-        } catch (InstantiationException e) {
-            throw new AuditException(e);
-        } catch (IllegalAccessException e) {
-            throw new AuditException(e);
-        } catch (InvocationTargetException e) {
-            throw new AuditException(e);
-        }
-    }
+	public void mapToEntityFromMap(AuditConfiguration verCfg, Object obj, Map data, Object primaryKey,
+								   AuditReaderImplementor versionsReader, Number revision,
+								   CustomPropertyInitializers initializers) {
+		PropertyData propertyData = commonCollectionMapperData.getCollectionReferencingPropertyData();
+		Setter setter = ReflectionTools.getSetter(obj.getClass(), propertyData);
+
+		if (initializers.canInitialize(propertyData)) {
+			Object initialValue = getInitializor(verCfg, versionsReader, primaryKey, revision).initializeCollection(0);
+			setter.set(obj, initialValue, null);
+		} else {
+			try {
+				setter.set(obj, proxyConstructor.newInstance(getInitializor(verCfg, versionsReader, primaryKey, revision)), null);
+			} catch (InstantiationException e) {
+				throw new AuditException(e);
+			} catch (IllegalAccessException e) {
+				throw new AuditException(e);
+			} catch (InvocationTargetException e) {
+				throw new AuditException(e);
+			}
+		}
+	}
 }
