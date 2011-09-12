@@ -1,29 +1,25 @@
 package org.hibernate.envers.configuration.metadata.reader;
-import static org.hibernate.envers.tools.Tools.newHashSet;
-import java.lang.annotation.Annotation;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
-import javax.persistence.JoinColumn;
-import javax.persistence.MapKey;
-import javax.persistence.Version;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
-import org.hibernate.envers.AuditJoinTable;
-import org.hibernate.envers.AuditMappedBy;
-import org.hibernate.envers.AuditOverride;
-import org.hibernate.envers.AuditOverrides;
-import org.hibernate.envers.Audited;
-import org.hibernate.envers.ModificationStore;
-import org.hibernate.envers.NotAudited;
+import org.hibernate.envers.*;
 import org.hibernate.envers.configuration.GlobalConfiguration;
 import org.hibernate.envers.tools.MappingTools;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Value;
+
+import javax.persistence.JoinColumn;
+import javax.persistence.MapKey;
+import javax.persistence.Version;
+import java.lang.annotation.Annotation;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
+
+import static org.hibernate.envers.tools.Tools.newHashSet;
 
 /**
  * Reads persistent properties form a
@@ -155,7 +151,7 @@ public class AuditedPropertiesReader {
 		//look in the class
 		addFromProperties(clazz.getDeclaredProperties("field"), "field", fieldAccessedPersistentProperties, allClassAudited);
 		addFromProperties(clazz.getDeclaredProperties("property"), "property", propertyAccessedPersistentProperties, allClassAudited);
-		
+
 		if(allClassAudited != null || !auditedPropertiesHolder.isEmpty()) {
 			XClass superclazz = clazz.getSuperclass();
 			if (!clazz.isInterface() && !"java.lang.Object".equals(superclazz.getName())) {
@@ -180,7 +176,7 @@ public class AuditedPropertiesReader {
 			}
 		}
 	}
-	
+
 	private void addFromComponentProperty(XProperty property,
 			String accessType, Component propertyValue, Audited allClassAudited) {
 
@@ -190,7 +186,7 @@ public class AuditedPropertiesReader {
 
 		PersistentPropertiesSource componentPropertiesSource = new ComponentPropertiesSource(
 				(Component) propertyValue);
-		
+
 		ComponentAuditedPropertiesReader audPropReader = new ComponentAuditedPropertiesReader(
 				ModificationStore.FULL, componentPropertiesSource,
 				componentData, globalCfg, reflectionManager, propertyNamePrefix
@@ -214,8 +210,8 @@ public class AuditedPropertiesReader {
 			auditedPropertiesHolder.addPropertyAuditingData(property.getName(), propertyData);
 		}
 	}
-	
-	
+
+
 	/**
 	 * Checks if a property is audited and if yes, fills all of its data.
 	 * @param property Property to check.
@@ -242,11 +238,11 @@ public class AuditedPropertiesReader {
 			}
 		}
 
-		
+
 		if(!this.checkAudited(property, propertyData, allClassAudited)){
 			return false;
 		}
-	
+
 
 		propertyData.setName(propertyNamePrefix + property.getName());
 		propertyData.setBeanName(property.getName());
@@ -263,7 +259,7 @@ public class AuditedPropertiesReader {
 		return true;
 	}
 
-	
+
 	protected boolean checkAudited(XProperty property,
 			PropertyAuditingData propertyData, Audited allClassAudited) {
 		// Checking if this property is explicitly audited or if all properties are.
@@ -287,6 +283,17 @@ public class AuditedPropertiesReader {
             }
         }
     }
+
+	private void setPropertyNoRevisionOnChange(XProperty property,
+										  PropertyAuditingData propertyData) {
+		NoRevisionOnChange noRevisionOnChange =
+				property.getAnnotation(NoRevisionOnChange.class);
+		if (noRevisionOnChange != null) {
+			propertyData.setNoRevisionOnChange(true);
+		} else {
+			propertyData.setNoRevisionOnChange(false);
+		}
+	}
 
 	private void addPropertyMapKey(XProperty property, PropertyAuditingData propertyData) {
 		MapKey mapKey = property.getAnnotation(MapKey.class);
@@ -348,7 +355,7 @@ public class AuditedPropertiesReader {
 					}
 				}
 			}
-			
+
 		}
 		return true;
 	}

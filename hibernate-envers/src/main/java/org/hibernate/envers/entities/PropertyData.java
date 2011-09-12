@@ -37,6 +37,7 @@ public class PropertyData {
     private final String accessType;
     private final ModificationStore store;
 
+
     /**
      * Copies the given property data, except the name.
      * @param newName New name.

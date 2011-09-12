@@ -23,14 +23,11 @@
  *
  */
 package org.hibernate.envers.configuration.metadata.reader;
+import org.hibernate.envers.*;
+import org.hibernate.envers.entities.PropertyData;
+
 import java.util.ArrayList;
 import java.util.List;
-import org.hibernate.envers.AuditJoinTable;
-import org.hibernate.envers.AuditOverride;
-import org.hibernate.envers.AuditOverrides;
-import org.hibernate.envers.ModificationStore;
-import org.hibernate.envers.RelationTargetAuditMode;
-import org.hibernate.envers.entities.PropertyData;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -47,6 +44,7 @@ public class PropertyAuditingData {
     private String auditMappedBy;
     private String positionMappedBy;
     private boolean forceInsertable;
+	private boolean noRevisionOnChange;
 
 	public PropertyAuditingData() {
     }
@@ -145,7 +143,15 @@ public class PropertyAuditingData {
         this.forceInsertable = forceInsertable;
     }
 
-    public void addAuditingOverride(AuditOverride annotation) {
+	public boolean isNoRevisionOnChange() {
+		return noRevisionOnChange;
+	}
+
+	public void setNoRevisionOnChange(boolean noRevisionOnChange) {
+		this.noRevisionOnChange = noRevisionOnChange;
+	}
+
+	public void addAuditingOverride(AuditOverride annotation) {
 		if (annotation != null) {
 			String overrideName = annotation.name();
 			boolean present = false;
