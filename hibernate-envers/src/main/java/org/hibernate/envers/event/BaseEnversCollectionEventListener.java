@@ -23,24 +23,20 @@
  */
 package org.hibernate.envers.event;
 
-import java.io.Serializable;
-import java.util.List;
+import org.hibernate.collection.spi.*;
+import org.hibernate.engine.spi.*;
+import org.hibernate.envers.*;
+import org.hibernate.envers.configuration.*;
+import org.hibernate.envers.entities.*;
+import org.hibernate.envers.entities.mapper.*;
+import org.hibernate.envers.entities.mapper.id.*;
+import org.hibernate.envers.synchronization.*;
+import org.hibernate.envers.synchronization.work.*;
+import org.hibernate.event.spi.*;
+import org.hibernate.persister.collection.*;
 
-import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.spi.CollectionEntry;
-import org.hibernate.envers.RevisionType;
-import org.hibernate.envers.configuration.AuditConfiguration;
-import org.hibernate.envers.entities.EntityConfiguration;
-import org.hibernate.envers.entities.RelationDescription;
-import org.hibernate.envers.entities.mapper.PersistentCollectionChangeData;
-import org.hibernate.envers.entities.mapper.id.IdMapper;
-import org.hibernate.envers.synchronization.AuditProcess;
-import org.hibernate.envers.synchronization.work.AuditWorkUnit;
-import org.hibernate.envers.synchronization.work.CollectionChangeWorkUnit;
-import org.hibernate.envers.synchronization.work.FakeBidirectionalRelationWorkUnit;
-import org.hibernate.envers.synchronization.work.PersistentCollectionChangeWorkUnit;
-import org.hibernate.event.spi.AbstractCollectionEvent;
-import org.hibernate.persister.collection.AbstractCollectionPersister;
+import java.io.*;
+import java.util.*;
 
 /**
  * Base class for Envers' collection event related listeners
@@ -100,7 +96,9 @@ public abstract class BaseEnversCollectionEventListener extends BaseEnversEventL
 				);
 				auditProcess.addWorkUnit( workUnit );
 
-                if (workUnit.containsWork()) {
+				if (workUnit.containsWork() && generateRevisionOnChange(
+						event.getAffectedOwnerEntityName(),
+						referencingPropertyName)) {
                     // There are some changes: a revision needs also be generated for the collection owner
                     auditProcess.addWorkUnit(
 							new CollectionChangeWorkUnit(
@@ -168,43 +166,53 @@ public abstract class BaseEnversCollectionEventListener extends BaseEnversEventL
 
             // This can be different from relatedEntityName, in case of inheritance (the real entity may be a subclass
             // of relatedEntityName).
-            String realRelatedEntityName = event.getSession().bestGuessEntityName(relatedObj);
+            String realRelatedEntityName = event.getSession().bestGuessEntityName(
+					relatedObj);
 
-            // By default, the nested work unit is a collection change work unit.
-            AuditWorkUnit nestedWorkUnit = new CollectionChangeWorkUnit(
-					event.getSession(),
-					realRelatedEntityName,
-					getAuditConfiguration(),
-                    relatedId,
-					relatedObj
-			);
+			if (generateRevisionOnChange(realRelatedEntityName,
+					rd.getMappedByPropertyName())) {
+				// By default, the nested work unit is a collection change work unit.
+				AuditWorkUnit nestedWorkUnit = new CollectionChangeWorkUnit(
+						event.getSession(),
+						realRelatedEntityName,
+						getAuditConfiguration(),
+						relatedId,
+						relatedObj
+				);
 
-            auditProcess.addWorkUnit(
-					new FakeBidirectionalRelationWorkUnit(
-							event.getSession(),
-							realRelatedEntityName,
-							getAuditConfiguration(),
-							relatedId,
-							referencingPropertyName,
-							event.getAffectedOwnerOrNull(),
-							rd,
-							revType,
-							changeData.getChangedElementIndex(),
-							nestedWorkUnit
-					)
-			);
+				auditProcess.addWorkUnit(
+						new FakeBidirectionalRelationWorkUnit(
+								event.getSession(),
+								realRelatedEntityName,
+								getAuditConfiguration(),
+								relatedId,
+								referencingPropertyName,
+								event.getAffectedOwnerOrNull(),
+								rd,
+								revType,
+								changeData.getChangedElementIndex(),
+								nestedWorkUnit
+						)
+				);
+			}
         }
 
-        // We also have to generate a collection change work unit for the owning entity.
-        auditProcess.addWorkUnit(
-				new CollectionChangeWorkUnit(
-						event.getSession(),
-						collectionEntityName,
-						getAuditConfiguration(),
-						event.getAffectedOwnerIdOrNull(),
-						event.getAffectedOwnerOrNull()
-				)
-		);
+
+		if (generateRevisionOnChange(collectionEntityName,
+				referencingPropertyName)) {
+			// We also have to generate a collection change work unit for the owning entity.
+			auditProcess.addWorkUnit(
+					new CollectionChangeWorkUnit(
+							event.getSession(),
+							collectionEntityName,
+							getAuditConfiguration(),
+							event.getAffectedOwnerIdOrNull(),
+							event.getAffectedOwnerOrNull()
+					)
+			);
+		}
+
+
     }
 
     private void generateBidirectionalCollectionChangeWorkUnits(
@@ -224,20 +232,30 @@ public abstract class BaseEnversCollectionEventListener extends BaseEnversEventL
             String relatedEntityName = rd.getToEntityName();
             IdMapper relatedIdMapper = getAuditConfiguration().getEntCfg().get( relatedEntityName ).getIdMapper();
 
-            for ( PersistentCollectionChangeData changeData : workUnit.getCollectionChanges() ) {
-                Object relatedObj = changeData.getChangedElement();
-                Serializable relatedId = (Serializable) relatedIdMapper.mapToIdFromEntity( relatedObj );
+			Set<String> toPropertyNames = getAuditConfiguration().getEntCfg()
+					.getToPropertyNames(event.getAffectedOwnerEntityName(), rd.getFromPropertyName(), relatedEntityName);
+			assert toPropertyNames.size() == 1;
+			String toPropertyName = toPropertyNames.iterator().next();
 
-                auditProcess.addWorkUnit(
-						new CollectionChangeWorkUnit(
-								event.getSession(),
-								relatedEntityName,
-								getAuditConfiguration(),
-								relatedId,
-								relatedObj
-						)
-				);
-            }
+			if (generateRevisionOnChange(relatedEntityName, toPropertyName)) {
+				for (PersistentCollectionChangeData changeData : workUnit
+						.getCollectionChanges()) {
+					Object relatedObj = changeData.getChangedElement();
+					Serializable relatedId = (Serializable) relatedIdMapper
+							.mapToIdFromEntity(relatedObj);
+
+					auditProcess.addWorkUnit(
+							new CollectionChangeWorkUnit(
+									event.getSession(),
+									relatedEntityName,
+									getAuditConfiguration(),
+									relatedId,
+									relatedObj
+							)
+					);
+				}
+			}
+
         }
     }
 }

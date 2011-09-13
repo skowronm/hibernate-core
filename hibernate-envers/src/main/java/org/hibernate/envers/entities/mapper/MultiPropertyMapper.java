@@ -57,7 +57,20 @@ public class MultiPropertyMapper implements ExtendedPropertyMapper {
 
 	@Override
 	public PropertyData getPropertyData(String propertyName) {
-		return propertyDatas.get(propertyName);
+		PropertyData propertyData = propertyDatas.get(propertyName);
+		if (propertyData != null) {
+			return propertyData;
+		}
+		for (PropertyMapper mapper : properties.values()) {
+			if (mapper instanceof SimpleMapperBuilder) {
+				propertyData = ((SimpleMapperBuilder) mapper)
+						.getPropertyData(propertyName);
+				if (propertyData != null) {
+					return propertyData;
+				}
+			}
+		}
+		return null;
 	}
 
 	public CompositeMapperBuilder addComponent(PropertyData propertyData, String componentClassName) {

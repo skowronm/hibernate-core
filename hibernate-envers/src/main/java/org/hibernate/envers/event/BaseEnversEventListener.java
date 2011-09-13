@@ -23,18 +23,18 @@
  */
 package org.hibernate.envers.event;
 
-import java.io.Serializable;
+import org.hibernate.engine.spi.*;
+import org.hibernate.envers.configuration.*;
+import org.hibernate.envers.entities.*;
+import org.hibernate.envers.entities.mapper.id.*;
+import org.hibernate.envers.synchronization.*;
+import org.hibernate.envers.synchronization.work.*;
+import org.hibernate.envers.tools.*;
+import org.hibernate.persister.entity.*;
+import org.hibernate.proxy.*;
 
-import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.envers.configuration.AuditConfiguration;
-import org.hibernate.envers.entities.RelationDescription;
-import org.hibernate.envers.entities.RelationType;
-import org.hibernate.envers.entities.mapper.id.IdMapper;
-import org.hibernate.envers.synchronization.AuditProcess;
-import org.hibernate.envers.synchronization.work.CollectionChangeWorkUnit;
-import org.hibernate.envers.tools.Tools;
-import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.proxy.HibernateProxy;
+import java.io.*;
+import java.util.*;
 
 /**
  * Base class for all Envers event listeners
@@ -53,6 +53,15 @@ public abstract class BaseEnversEventListener implements EnversListener {
 	@Override
 	public AuditConfiguration getAuditConfiguration() {
 		return enversConfiguration;
+	}
+
+	protected boolean generateRevisionOnChange(String entityName,
+											 String propertyName) {
+		return !getAuditConfiguration().getEntCfg()
+				.get(entityName)
+				.getPropertyMapper()
+				.getPropertyData(propertyName)
+				.isNoRevisionOnChange();
 	}
 
 	protected final void generateBidirectionalCollectionChangeWorkUnits(
@@ -103,7 +112,22 @@ public abstract class BaseEnversEventListener implements EnversListener {
 							 id = (Serializable) idMapper.mapToIdFromEntity(newValue);
 						}
 
-						auditProcess.addWorkUnit(new CollectionChangeWorkUnit(session, toEntityName, enversConfiguration, id, newValue));
+						Set<String> toPropertyNames =
+								enversConfiguration.getEntCfg()
+										.getToPropertyNames(entityName,
+												relDesc.getFromPropertyName(),
+												toEntityName);
+						assert toPropertyNames.size() == 1;
+						String toPropertyName =
+								toPropertyNames.iterator().next();
+						if (generateRevisionOnChange(toEntityName,
+								toPropertyName)) {
+							auditProcess.addWorkUnit(
+									new CollectionChangeWorkUnit(session,
+											toEntityName, enversConfiguration,
+											id, newValue));
+						}
+
 					}
 
 					if (oldValue != null) {
@@ -123,7 +147,23 @@ public abstract class BaseEnversEventListener implements EnversListener {
 							id = (Serializable) idMapper.mapToIdFromEntity(oldValue);
 						}
 
-						auditProcess.addWorkUnit(new CollectionChangeWorkUnit(session, toEntityName, enversConfiguration, id, oldValue));
+						Set<String> toPropertyNames =
+								enversConfiguration.getEntCfg()
+										.getToPropertyNames(entityName,
+												relDesc.getFromPropertyName(),
+												toEntityName);
+						assert toPropertyNames.size() == 1;
+						String toPropertyName =
+								toPropertyNames.iterator().next();
+
+						if (generateRevisionOnChange(toEntityName,
+								toPropertyName)) {
+							auditProcess.addWorkUnit(
+									new CollectionChangeWorkUnit(session,
+											toEntityName, enversConfiguration,
+											id, oldValue));
+						}
+
 					}
 				}
 			}

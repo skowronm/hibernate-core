@@ -112,7 +112,7 @@ public class PropertyAuditingData {
     }
 
     public PropertyData getPropertyData() {
-        return new PropertyData(name, beanName, accessType, store);
+        return new PropertyData(name, beanName, accessType, store, noRevisionOnChange);
     }
 
 	public List<AuditOverride> getAuditingOverrides() {

@@ -59,7 +59,7 @@ public class ComponentPropertyMapper implements PropertyMapper, CompositeMapperB
 		if (propertyData.getName().equals(propertyName)) {
 			return propertyData;
 		}
-		return delegate.getPropertyData(propertyName);
+		return delegate.getPropertyData(propertyName.replace(".", "_"));
 	}
 
 	public CompositeMapperBuilder addComponent(PropertyData propertyData, String componentClassName) {

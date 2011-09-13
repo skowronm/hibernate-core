@@ -36,6 +36,7 @@ public class PropertyData {
 	private final String beanName;
     private final String accessType;
     private final ModificationStore store;
+	private boolean noRevisionOnChange;
 
 
     /**
@@ -48,6 +49,7 @@ public class PropertyData {
 		this.beanName = propertyData.beanName;
         this.accessType = propertyData.accessType;
         this.store = propertyData.store;
+		this.noRevisionOnChange = propertyData.noRevisionOnChange;
     }
 
     /**
@@ -61,6 +63,21 @@ public class PropertyData {
 		this.beanName = beanName;
         this.accessType = accessType;
         this.store = store;
+		this.noRevisionOnChange = false;
+    }
+
+    /**
+     * @param name Name of the property.
+	 * @param beanName Name of the property in the bean.
+     * @param accessType Accessor type for this property.
+     * @param store How this property should be stored.
+     */
+    public PropertyData(String name, String beanName, String accessType, ModificationStore store, boolean noRevisionOnChange) {
+        this.name = name;
+		this.beanName = beanName;
+        this.accessType = accessType;
+        this.store = store;
+		this.noRevisionOnChange = noRevisionOnChange;
     }
 
     public String getName() {
@@ -79,6 +96,10 @@ public class PropertyData {
         return store;
     }
 
+	public boolean isNoRevisionOnChange() {
+		return noRevisionOnChange;
+	}
+
 	@Override
 	public boolean equals(Object o) {
 		if (this == o) return true;
@@ -90,6 +111,7 @@ public class PropertyData {
 		if (beanName != null ? !beanName.equals(that.beanName) : that.beanName != null) return false;
 		if (name != null ? !name.equals(that.name) : that.name != null) return false;
 		if (store != that.store) return false;
+		if (noRevisionOnChange != that.noRevisionOnChange) return false;
 
 		return true;
 	}
@@ -100,6 +122,7 @@ public class PropertyData {
 		result = 31 * result + (beanName != null ? beanName.hashCode() : 0);
 		result = 31 * result + (accessType != null ? accessType.hashCode() : 0);
 		result = 31 * result + (store != null ? store.hashCode() : 0);
+		result = 31 * result + (noRevisionOnChange ? 1 : 0);
 		return result;
 	}
 }
