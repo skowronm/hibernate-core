@@ -22,10 +22,11 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.entities.mapper.id;
-import java.util.Map;
 import org.hibernate.envers.entities.PropertyData;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.tools.Tools;
+
+import java.util.Map;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -45,7 +46,17 @@ public abstract class AbstractCompositeIdMapper extends AbstractIdMapper impleme
         ids.put(propertyData, new SingleIdMapper(propertyData));
     }
 
-    public Object mapToIdFromMap(Map data) {
+	@Override
+	public PropertyData getPropertyData(String propertyName) {
+		for (PropertyData propertyData : ids.keySet()) {
+			if (propertyData.getName().equals(propertyName)) {
+				return propertyData;
+			}
+		}
+		return null;
+	}
+
+	public Object mapToIdFromMap(Map data) {
         if (data == null) {
             return null;
         }

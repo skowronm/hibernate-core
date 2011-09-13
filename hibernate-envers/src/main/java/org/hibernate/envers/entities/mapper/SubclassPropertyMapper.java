@@ -22,14 +22,15 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.entities.mapper;
-import java.io.Serializable;
-import java.util.List;
-import java.util.Map;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.entities.PropertyData;
 import org.hibernate.envers.reader.AuditReaderImplementor;
+
+import java.io.Serializable;
+import java.util.List;
+import java.util.Map;
 
 /**
  * A mapper which maps from a parent mapper and a "main" one, but adds only to the "main". The "main" mapper
@@ -95,4 +96,13 @@ public class SubclassPropertyMapper implements ExtendedPropertyMapper {
     public void add(PropertyData propertyData) {
         main.add(propertyData);
     }
+
+	@Override
+	public PropertyData getPropertyData(String propertyName) {
+		PropertyData propertyData = parentMapper.getPropertyData(propertyName);
+		if (propertyData != null) {
+			return propertyData;
+		}
+		return main.getPropertyData(propertyName);
+	}
 }

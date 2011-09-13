@@ -22,9 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.entities.mapper;
-import java.io.Serializable;
-import java.util.List;
-import java.util.Map;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.configuration.AuditConfiguration;
@@ -34,6 +31,10 @@ import org.hibernate.envers.tools.MappingTools;
 import org.hibernate.envers.tools.Tools;
 import org.hibernate.envers.tools.reflection.ReflectionTools;
 import org.hibernate.property.Getter;
+
+import java.io.Serializable;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -54,7 +55,12 @@ public class MultiPropertyMapper implements ExtendedPropertyMapper {
         propertyDatas.put(propertyData.getName(), propertyData);
     }
 
-    public CompositeMapperBuilder addComponent(PropertyData propertyData, String componentClassName) {
+	@Override
+	public PropertyData getPropertyData(String propertyName) {
+		return propertyDatas.get(propertyName);
+	}
+
+	public CompositeMapperBuilder addComponent(PropertyData propertyData, String componentClassName) {
         if (properties.get(propertyData) != null) {
 			// This is needed for second pass to work properly in the components mapper
             return (CompositeMapperBuilder) properties.get(propertyData);

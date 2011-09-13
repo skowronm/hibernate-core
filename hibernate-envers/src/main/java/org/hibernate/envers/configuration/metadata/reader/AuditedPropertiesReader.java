@@ -111,7 +111,7 @@ public class AuditedPropertiesReader {
 	private void readPersistentPropertiesAccess() {
 		Iterator<Property> propertyIter = persistentPropertiesSource.getPropertyIterator();
 		while (propertyIter.hasNext()) {
-			Property property = (Property) propertyIter.next();
+			Property property = propertyIter.next();
 			if ("field".equals(property.getPropertyAccessorName())) {
 				fieldAccessedPersistentProperties.add(property.getName());
 			} else {
@@ -147,10 +147,13 @@ public class AuditedPropertiesReader {
      */
 	private void addPropertiesFromClass(XClass clazz, Set<XClass> declaredAuditedSuperclasses)  {
 		Audited allClassAudited = computeAuditConfiguration(clazz, declaredAuditedSuperclasses);
+		NoRevisionOnChange noRevisionOnChange =
+				clazz.isAnnotationPresent(NoRevisionOnChange.class) ?
+						clazz.getAnnotation(NoRevisionOnChange.class) : null;
 
 		//look in the class
-		addFromProperties(clazz.getDeclaredProperties("field"), "field", fieldAccessedPersistentProperties, allClassAudited);
-		addFromProperties(clazz.getDeclaredProperties("property"), "property", propertyAccessedPersistentProperties, allClassAudited);
+		addFromProperties(clazz.getDeclaredProperties("field"), "field", fieldAccessedPersistentProperties, allClassAudited, noRevisionOnChange);
+		addFromProperties(clazz.getDeclaredProperties("property"), "property", propertyAccessedPersistentProperties, allClassAudited, noRevisionOnChange);
 
 		if(allClassAudited != null || !auditedPropertiesHolder.isEmpty()) {
 			XClass superclazz = clazz.getSuperclass();
@@ -160,7 +163,11 @@ public class AuditedPropertiesReader {
 		}
 	}
 
-	private void addFromProperties(Iterable<XProperty> properties, String accessType, Set<String> persistentProperties, Audited allClassAudited) {
+	private void addFromProperties(Iterable<XProperty> properties,
+								   String accessType,
+								   Set<String> persistentProperties,
+								   Audited allClassAudited,
+								   NoRevisionOnChange classNoRevisionOnChange) {
 		for (XProperty property : properties) {
 			// If this is not a persistent property, with the same access type as currently checked,
 			// it's not audited as well. 
@@ -169,20 +176,26 @@ public class AuditedPropertiesReader {
 					.contains(property.getName())))) {
 				Value propertyValue = persistentPropertiesSource.getProperty(property.getName()).getValue();
 				if (propertyValue instanceof Component) {
-					this.addFromComponentProperty(property, accessType, (Component)propertyValue, allClassAudited);
+					this.addFromComponentProperty(property, accessType,
+							(Component) propertyValue, allClassAudited,
+							classNoRevisionOnChange);
 				} else {
-					this.addFromNotComponentProperty(property, accessType, allClassAudited);
+					this.addFromNotComponentProperty(property, accessType,
+							allClassAudited, classNoRevisionOnChange);
 				}
 			}
 		}
 	}
 
 	private void addFromComponentProperty(XProperty property,
-			String accessType, Component propertyValue, Audited allClassAudited) {
+										  String accessType,
+										  Component propertyValue,
+										  Audited allClassAudited,
+										  NoRevisionOnChange classNoRevisionOnChange) {
 
 		ComponentAuditingData componentData = new ComponentAuditingData();
 		boolean isAudited = fillPropertyData(property, componentData, accessType,
-				allClassAudited);
+				allClassAudited, classNoRevisionOnChange);
 
 		PersistentPropertiesSource componentPropertiesSource = new ComponentPropertiesSource(
 				(Component) propertyValue);
@@ -201,13 +214,18 @@ public class AuditedPropertiesReader {
 		}
 	}
 
-	private void addFromNotComponentProperty(XProperty property, String accessType, Audited allClassAudited){
+	private void addFromNotComponentProperty(XProperty property,
+											 String accessType,
+											 Audited allClassAudited,
+											 NoRevisionOnChange classNoRevisionOnChange) {
 		PropertyAuditingData propertyData = new PropertyAuditingData();
-		boolean isAudited = fillPropertyData(property, propertyData, accessType, allClassAudited);
+		boolean isAudited = fillPropertyData(property, propertyData, accessType,
+				allClassAudited, classNoRevisionOnChange);
 
 		if (isAudited) {
 			// Now we know that the property is audited
-			auditedPropertiesHolder.addPropertyAuditingData(property.getName(), propertyData);
+			auditedPropertiesHolder
+					.addPropertyAuditingData(property.getName(), propertyData);
 		}
 	}
 
@@ -219,8 +237,10 @@ public class AuditedPropertiesReader {
 	 * @param accessType Access type for the property.
 	 * @return False if this property is not audited.
 	 */
-	private boolean fillPropertyData(XProperty property, PropertyAuditingData propertyData,
-									 String accessType, Audited allClassAudited) {
+	private boolean fillPropertyData(XProperty property,
+									 PropertyAuditingData propertyData,
+									 String accessType, Audited allClassAudited,
+									 NoRevisionOnChange classNoRevisionOnChange) {
 
 		// check if a property is declared as not audited to exclude it
 		// useful if a class is audited but some properties should be excluded
@@ -255,6 +275,7 @@ public class AuditedPropertiesReader {
 		}
 		addPropertyMapKey(property, propertyData);
         setPropertyAuditMappedBy(property, propertyData);
+		setPropertyNoRevisionOnChange(property, propertyData, classNoRevisionOnChange);
 
 		return true;
 	}
@@ -285,9 +306,12 @@ public class AuditedPropertiesReader {
     }
 
 	private void setPropertyNoRevisionOnChange(XProperty property,
-										  PropertyAuditingData propertyData) {
+											   PropertyAuditingData propertyData,
+											   NoRevisionOnChange classNoRevisionOnChange) {
 		NoRevisionOnChange noRevisionOnChange =
-				property.getAnnotation(NoRevisionOnChange.class);
+				property.isAnnotationPresent(NoRevisionOnChange.class) ?
+						property.getAnnotation(NoRevisionOnChange.class) :
+						classNoRevisionOnChange;
 		if (noRevisionOnChange != null) {
 			propertyData.setNoRevisionOnChange(true);
 		} else {

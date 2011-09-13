@@ -28,5 +28,7 @@ import org.hibernate.envers.entities.PropertyData;
  * @author Adam Warski (adam at warski dot org)
  */
 public interface SimpleMapperBuilder {    
-    public void add(PropertyData propertyData);
+    void add(PropertyData propertyData);
+
+	PropertyData getPropertyData(String propertyName);
 }

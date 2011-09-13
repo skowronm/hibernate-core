@@ -22,9 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.entities.mapper;
-import java.io.Serializable;
-import java.util.List;
-import java.util.Map;
 import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -36,6 +33,10 @@ import org.hibernate.envers.tools.Tools;
 import org.hibernate.envers.tools.reflection.ReflectionTools;
 import org.hibernate.property.DirectPropertyAccessor;
 import org.hibernate.property.Setter;
+
+import java.io.Serializable;
+import java.util.List;
+import java.util.Map;
 
 /**
  * TODO: diff
@@ -58,7 +59,15 @@ public class SinglePropertyMapper implements PropertyMapper, SimpleMapperBuilder
         this.propertyData = propertyData;
     }
 
-    public boolean mapToMapFromEntity(SessionImplementor session, Map<String, Object> data, Object newObj, Object oldObj) {
+	@Override
+	public PropertyData getPropertyData(String propertyName) {
+		if (propertyData.getName().equals(propertyName)) {
+			return propertyData;
+		}
+		return null;
+	}
+
+	public boolean mapToMapFromEntity(SessionImplementor session, Map<String, Object> data, Object newObj, Object oldObj) {
         data.put(propertyData.getName(), newObj);
 
         return !Tools.objectsEqual(newObj, oldObj);

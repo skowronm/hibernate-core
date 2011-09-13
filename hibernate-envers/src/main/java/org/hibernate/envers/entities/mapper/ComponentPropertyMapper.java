@@ -22,9 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.entities.mapper;
-import java.io.Serializable;
-import java.util.List;
-import java.util.Map;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.configuration.AuditConfiguration;
@@ -32,8 +29,12 @@ import org.hibernate.envers.entities.PropertyData;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.reader.AuditReaderImplementor;
 import org.hibernate.envers.tools.reflection.ReflectionTools;
-import org.hibernate.property.Setter;
 import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.property.Setter;
+
+import java.io.Serializable;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -53,7 +54,15 @@ public class ComponentPropertyMapper implements PropertyMapper, CompositeMapperB
         delegate.add(propertyData);
     }
 
-    public CompositeMapperBuilder addComponent(PropertyData propertyData, String componentClassName) {
+	@Override
+	public PropertyData getPropertyData(String propertyName) {
+		if (propertyData.getName().equals(propertyName)) {
+			return propertyData;
+		}
+		return delegate.getPropertyData(propertyName);
+	}
+
+	public CompositeMapperBuilder addComponent(PropertyData propertyData, String componentClassName) {
         return delegate.addComponent(propertyData, componentClassName);
     }
 

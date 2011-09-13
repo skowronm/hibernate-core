@@ -22,15 +22,16 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.entities.mapper.id;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 import org.hibernate.envers.entities.PropertyData;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.tools.reflection.ReflectionTools;
 import org.hibernate.property.Getter;
 import org.hibernate.property.Setter;
 import org.hibernate.proxy.HibernateProxy;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -53,7 +54,15 @@ public class SingleIdMapper extends AbstractIdMapper implements SimpleIdMapperBu
         this.propertyData = propertyData;
     }
 
-    public boolean mapToEntityFromMap(Object obj, Map data) {
+	@Override
+	public PropertyData getPropertyData(String propertyName) {
+		if (propertyData.getName().equals(propertyName)) {
+			return propertyData;
+		}
+		return null;
+	}
+
+	public boolean mapToEntityFromMap(Object obj, Map data) {
         if (data == null || obj == null) {
             return false;
         }
