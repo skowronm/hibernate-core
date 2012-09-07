@@ -124,11 +124,15 @@ public class EntitiesConfigurator {
                 auditMetaGen.generateSecondPass(pcDatasEntry.getKey(), pcDatasEntry.getValue(), xmlMappingData);
                 try {
                     cfg.addDocument(writer.write(xmlMappingData.getMainXmlMapping()));
-                    //writeDocument(xmlMappingData.getMainXmlMapping());
+                    if (verEntCfg.isLogAuditMappings()) {
+                        writeDocument(xmlMappingData.getMainXmlMapping());
+                    }
 
                     for (Document additionalMapping : xmlMappingData.getAdditionalXmlMappings()) {
                         cfg.addDocument(writer.write(additionalMapping));
-                        //writeDocument(additionalMapping);
+                        if (verEntCfg.isLogAuditMappings()) {
+                            writeDocument(additionalMapping);
+                        }
                     }
                 } catch (DocumentException e) {
                     throw new MappingException(e);
@@ -140,7 +144,9 @@ public class EntitiesConfigurator {
         if (auditMetaGen.getEntitiesConfigurations().size() > 0) {
             try {
                 if (revisionInfoXmlMapping !=  null) {
-                    //writeDocument(revisionInfoXmlMapping);
+                    if (verEntCfg.isLogAuditMappings()) {
+                        writeDocument(revisionInfoXmlMapping);
+                    }
                     cfg.addDocument(writer.write(revisionInfoXmlMapping));
                 }
             } catch (DocumentException e) {

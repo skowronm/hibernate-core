@@ -59,6 +59,7 @@ public class AuditEntitiesConfiguration {
     
     private final boolean revisionEndTimestampEnabled;
     private final String revisionEndTimestampFieldName;
+    private final boolean logAuditMappings;
 
     public AuditEntitiesConfiguration(Properties properties, String revisionInfoEntityName) {
         this.revisionInfoEntityName = revisionInfoEntityName;
@@ -114,7 +115,13 @@ public class AuditEntitiesConfiguration {
         } else {
             revisionEndTimestampFieldName = null;
         }
-        
+
+        String logAuditMappingsStr = getProperty(properties,
+                "org.hibernate.envers.log_audit_mappings",
+                "org.hibernate.envers.logAuditMappings",
+                "false");
+        logAuditMappings = Boolean.parseBoolean(logAuditMappingsStr);
+
         customAuditTablesNames = new HashMap<String, String>();
 
         revisionNumberPath = originalIdPropName + "." + revisionFieldName + ".id";
@@ -136,7 +143,11 @@ public class AuditEntitiesConfiguration {
 	public String getRevisionEndTimestampFieldName() {
 		return revisionEndTimestampFieldName;
 	}
-    
+
+    public boolean isLogAuditMappings() {
+        return logAuditMappings;
+    }
+
     public String getRevisionNumberPath() {
         return revisionNumberPath;
     }
