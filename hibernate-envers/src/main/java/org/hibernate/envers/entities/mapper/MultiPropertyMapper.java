@@ -37,6 +37,10 @@ import org.hibernate.envers.tools.Tools;
 import org.hibernate.envers.tools.reflection.ReflectionTools;
 import org.hibernate.property.Getter;
 
+import java.io.Serializable;
+import java.util.List;
+import java.util.Map;
+
 /**
  * @author Adam Warski (adam at warski dot org)
  * @author Michal Skowronek (mskowr at o2 dot pl)
@@ -59,12 +63,12 @@ public class MultiPropertyMapper implements ExtendedPropertyMapper {
 
     public CompositeMapperBuilder addComponent(PropertyData propertyData, String componentClassName) {
         if (properties.get(propertyData) != null) {
-			// This is needed for second pass to work properly in the components mapper
+            // This is needed for second pass to work properly in the components mapper
             return (CompositeMapperBuilder) properties.get(propertyData);
         }
 
         ComponentPropertyMapper componentMapperBuilder = new ComponentPropertyMapper(propertyData, componentClassName);
-		addComposite(propertyData, componentMapperBuilder);
+        addComposite(propertyData, componentMapperBuilder);
 
         return componentMapperBuilder;
     }
@@ -74,11 +78,13 @@ public class MultiPropertyMapper implements ExtendedPropertyMapper {
         propertyDatas.put(propertyData.getName(), propertyData);
     }
 
-    private Object getAtIndexOrNull(Object[] array, int index) { return array == null ? null : array[index]; }
+    private Object getAtIndexOrNull(Object[] array, int index) {
+        return array == null ? null : array[index];
+    }
 
     public boolean map(SessionImplementor session, Map<String, Object> data, String[] propertyNames, Object[] newState, Object[] oldState) {
         boolean ret = false;
-        for (int i=0; i<propertyNames.length; i++) {
+        for (int i = 0; i < propertyNames.length; i++) {
             String propertyName = propertyNames[i];
 
             if (propertyDatas.containsKey(propertyName)) {
@@ -142,14 +148,14 @@ public class MultiPropertyMapper implements ExtendedPropertyMapper {
 		// Name of the property, to which we will delegate the mapping.
 		String delegatePropertyName;
 
-		// Checking if the property name doesn't reference a collection in a component - then the name will containa a .
-		int dotIndex = referencingPropertyName.indexOf('.');
-		if (dotIndex != -1) {
-			// Computing the name of the component
-			String componentName = referencingPropertyName.substring(0, dotIndex);
-			// And the name of the property in the component
-			String propertyInComponentName = MappingTools.createComponentPrefix(componentName)
-					+ referencingPropertyName.substring(dotIndex+1);
+        // Checking if the property name doesn't reference a collection in a component - then the name will containa a .
+        int dotIndex = referencingPropertyName.indexOf('.');
+        if (dotIndex != -1) {
+            // Computing the name of the component
+            String componentName = referencingPropertyName.substring(0, dotIndex);
+            // And the name of the property in the component
+            String propertyInComponentName = MappingTools.createComponentPrefix(componentName)
+                    + referencingPropertyName.substring(dotIndex + 1);
 
 			// We need to get the mapper for the component.
 			referencingPropertyName = componentName;
@@ -190,7 +196,13 @@ public class MultiPropertyMapper implements ExtendedPropertyMapper {
         }
     }
 
+    public void initializeInstance(Object instance, Map instanceAttributes, List queryResult, EntityInstantiator entityInstantiator) {
+        for (PropertyMapper propertyMapper : properties.values()) {
+            propertyMapper.initializeInstance(instance, instanceAttributes, queryResult, entityInstantiator);
+        }
+    }
+
     public Map<PropertyData, PropertyMapper> getProperties() {
-		return properties;
-	}
+        return properties;
+    }
 }

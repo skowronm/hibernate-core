@@ -29,6 +29,7 @@ import java.util.Map;
 
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.envers.configuration.AuditConfiguration;
+import org.hibernate.envers.entities.EntityInstantiator;
 import org.hibernate.envers.entities.mapper.PropertyMapper;
 import org.hibernate.envers.entities.mapper.relation.lazy.initializor.Initializor;
 import org.hibernate.envers.entities.mapper.relation.lazy.initializor.MapCollectionInitializor;
@@ -78,5 +79,9 @@ public class MapCollectionMapper<T extends Map> extends AbstractCollectionMapper
 
     public void addToAuditQuery(QueryBuilder qb) {
         // Eventually there will be logic here that joins collection using commonCollectionMapperData
+    }
+
+    public void initializeInstance(Object instance, Map instanceAttributes, List queryResult, EntityInstantiator entityInstantiator) {
+        // Eventually there will be logic here that initializes collection using data from query result
     }
 }

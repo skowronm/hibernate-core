@@ -31,6 +31,7 @@ import java.util.Map;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.configuration.AuditConfiguration;
+import org.hibernate.envers.entities.EntityInstantiator;
 import org.hibernate.envers.entities.PropertyData;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.reader.AuditReaderImplementor;
@@ -50,15 +51,15 @@ import java.util.Map;
 public class ComponentPropertyMapper implements PropertyMapper, CompositeMapperBuilder {
     private final PropertyData propertyData;
     private final MultiPropertyMapper delegate;
-	private final String componentClassName;
+    private final String componentClassName;
 
     public ComponentPropertyMapper(PropertyData propertyData, String componentClassName) {
         this.propertyData = propertyData;
         this.delegate = new MultiPropertyMapper();
-		this.componentClassName = componentClassName;
+        this.componentClassName = componentClassName;
     }
 
-	public void add(PropertyData propertyData) {
+    public void add(PropertyData propertyData) {
         delegate.add(propertyData);
     }
 
@@ -110,39 +111,44 @@ public class ComponentPropertyMapper implements PropertyMapper, CompositeMapperB
 
         Setter setter = ReflectionTools.getSetter(obj.getClass(), propertyData);
 
-		// If all properties are null and single, then the component has to be null also.
-		boolean allNullAndSingle = true;
-		for (Map.Entry<PropertyData, PropertyMapper> property : delegate.getProperties().entrySet()) {
-			if (data.get(property.getKey().getName()) != null || !(property.getValue() instanceof SinglePropertyMapper)) {
-				allNullAndSingle = false;
-				break;
-			}
-		}
+        // If all properties are null and single, then the component has to be null also.
+        boolean allNullAndSingle = true;
+        for (Map.Entry<PropertyData, PropertyMapper> property : delegate.getProperties().entrySet()) {
+            if (data.get(
+                    property.getKey().getName()) != null || !(property.getValue() instanceof SinglePropertyMapper)) {
+                allNullAndSingle = false;
+                break;
+            }
+        }
 
-		if (allNullAndSingle) {
-			// single property, but default value need not be null, so we'll set it to null anyway 
-			setter.set(obj, null, null);			
-		} else {
-			// set the component
-			try {
-				Object subObj = ReflectHelper.getDefaultConstructor(
-						Thread.currentThread().getContextClassLoader().loadClass(componentClassName)).newInstance();
-				setter.set(obj, subObj, null);
-				delegate.mapToEntityFromMap(verCfg, subObj, data, primaryKey, versionsReader, revision);
-			} catch (Exception e) {
-				throw new AuditException(e);
-			}
-		}
+        if (allNullAndSingle) {
+            // single property, but default value need not be null, so we'll set it to null anyway
+            setter.set(obj, null, null);
+        } else {
+            // set the component
+            try {
+                Object subObj = ReflectHelper.getDefaultConstructor(
+                        Thread.currentThread().getContextClassLoader().loadClass(componentClassName)).newInstance();
+                setter.set(obj, subObj, null);
+                delegate.mapToEntityFromMap(verCfg, subObj, data, primaryKey, versionsReader, revision);
+            } catch (Exception e) {
+                throw new AuditException(e);
+            }
+        }
     }
 
- 	public List<PersistentCollectionChangeData> mapCollectionChanges(String referencingPropertyName,
-                                                                                    PersistentCollection newColl,
-                                                                                    Serializable oldColl,
-                                                                                    Serializable id) {
+    public List<PersistentCollectionChangeData> mapCollectionChanges(String referencingPropertyName,
+                                                                     PersistentCollection newColl,
+                                                                     Serializable oldColl,
+                                                                     Serializable id) {
         return delegate.mapCollectionChanges(referencingPropertyName, newColl, oldColl, id);
     }
 
     public void addToAuditQuery(QueryBuilder qb) {
         delegate.addToAuditQuery(qb);
+    }
+
+    public void initializeInstance(Object instance, Map instanceAttributes, List queryResult, EntityInstantiator entityInstantiator) {
+        delegate.initializeInstance(instance, instanceAttributes, queryResult, entityInstantiator);
     }
 }

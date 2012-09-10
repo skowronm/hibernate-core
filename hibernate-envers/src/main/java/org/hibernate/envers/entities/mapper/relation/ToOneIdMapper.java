@@ -61,9 +61,9 @@ public class ToOneIdMapper extends AbstractToOneMapper {
         // to this field. It is the responsibility of the collection to properly update it if it really changed.
         delegate.mapToMapFromEntity(newData, nonInsertableFake ? oldObj : newObj);
 
-		for (Map.Entry<String, Object> entry : newData.entrySet()) {
-			data.put(entry.getKey(), entry.getValue());
-		}
+        for (Map.Entry<String, Object> entry : newData.entrySet()) {
+            data.put(entry.getKey(), entry.getValue());
+        }
 
         return checkModified(session, newObj, oldObj);
     }
@@ -108,5 +108,22 @@ public class ToOneIdMapper extends AbstractToOneMapper {
 
     public void addToAuditQuery(QueryBuilder qb) {
         // Eventually there will be logic here that joins referencedEntityName using delegate IdMapper
+        /*qb.addFrom(referencedEntityName + "_AUD", propertyData.getName() + "_relation");
+        String toOneRelationPrefix = MappingTools.createToOneRelationPrefix(propertyData.getName());
+        List<QueryParameterData> queryParameterDatas = delegate.mapToQueryParametersFromId(null);
+        Parameters rootParameters = qb.getRootParameters();
+        for (QueryParameterData queryParameterData : queryParameterDatas) {
+            String propertyName = queryParameterData.getProperty(null);
+            String referencedName =
+                    propertyData.getName() + "_relation.originalId." + propertyName.replace(toOneRelationPrefix, "");
+            rootParameters.addWhere(propertyName, true, "=", referencedName, false);
+        }
+        Parameters subParm = rootParameters.addSubParameters("or");
+        rootParameters.addWhere(propertyData.getName() + "_relation.originalId.REV", false, "<=", "originalId.REV", true);
+        subParm.addWhere(propertyData.getName() + "_relation.REVEND", false, ">", "originalId.REV", true);
+        subParm.addWhere(propertyData.getName() + "_relation.REVEND", false, "is", "null", false);*/
+    }
+
+    public void initializeInstance(Object instance, Map instanceAttributes, List queryResult, EntityInstantiator entityInstantiator) {
     }
 }

@@ -38,32 +38,35 @@ import org.hibernate.envers.reader.AuditReaderImplementor;
 public interface PropertyMapper {
     /**
      * Maps properties to the given map, basing on differences between properties of new and old objects.
+     *
      * @param session The current session.
-	 * @param data Data to map to.
-	 * @param newObj New state of the entity.
-	 * @param oldObj Old state of the entity.
-	 * @return True if there are any differences between the states represented by newObj and oldObj.
+     * @param data    Data to map to.
+     * @param newObj  New state of the entity.
+     * @param oldObj  Old state of the entity.
+     * @return True if there are any differences between the states represented by newObj and oldObj.
      */
     boolean mapToMapFromEntity(SessionImplementor session, Map<String, Object> data, Object newObj, Object oldObj);
 
     /**
      * Maps properties from the given map to the given object.
-     * @param verCfg Versions configuration.
-     * @param obj Object to map to.
-     * @param data Data to map from.
-     * @param primaryKey Primary key of the object to which we map (for relations)
+     *
+     * @param verCfg         Versions configuration.
+     * @param obj            Object to map to.
+     * @param data           Data to map from.
+     * @param primaryKey     Primary key of the object to which we map (for relations)
      * @param versionsReader VersionsReader for reading relations
-     * @param revision Revision at which the object is read, for reading relations
+     * @param revision       Revision at which the object is read, for reading relations
      */
     void mapToEntityFromMap(AuditConfiguration verCfg, Object obj, Map data, Object primaryKey,
                             AuditReaderImplementor versionsReader, Number revision);
 
     /**
      * Maps collection changes
+     *
      * @param referencingPropertyName Name of the field, which holds the collection in the entity.
-     * @param newColl New collection, after updates.
-     * @param oldColl Old collection, before updates.
-     * @param id Id of the object owning the collection.
+     * @param newColl                 New collection, after updates.
+     * @param oldColl                 Old collection, before updates.
+     * @param id                      Id of the object owning the collection.
      * @return List of changes that need to be performed on the persistent store.
      */
     List<PersistentCollectionChangeData> mapCollectionChanges(String referencingPropertyName,
@@ -75,7 +78,18 @@ public interface PropertyMapper {
 
     /**
      * The method allows mapper to adjust audit query before it is issued to hibernate making it possible to implement various fetching strategies
+     *
      * @param qb QueryBuilder used by AbstractAuditQuery
      */
     void addToAuditQuery(QueryBuilder qb);
+
+    /**
+     * The method allows mapper to further initialize properties in instance based on query results
+     *
+     * @param instance           Instance of the root entity containing the property
+     * @param instanceAttributes Full attributes set describing root entity
+     * @param queryResult        Full result of the audit query containing all instances
+     * @param entityInstantiator tool for creating class instances out of properties maps
+     */
+    void initializeInstance(Object instance, Map instanceAttributes, List queryResult, EntityInstantiator entityInstantiator);
 }

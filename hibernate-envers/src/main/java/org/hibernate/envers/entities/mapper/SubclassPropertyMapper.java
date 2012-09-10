@@ -35,6 +35,7 @@ import org.hibernate.envers.reader.AuditReaderImplementor;
 /**
  * A mapper which maps from a parent mapper and a "main" one, but adds only to the "main". The "main" mapper
  * should be the mapper of the subclass.
+ *
  * @author Adam Warski (adam at warski dot org)
  * @author Michal Skowronek (mskowr at o2 dot pl)
  */
@@ -85,22 +86,27 @@ public class SubclassPropertyMapper implements ExtendedPropertyMapper {
         List<PersistentCollectionChangeData> parentCollectionChanges = parentMapper.mapCollectionChanges(
                 referencingPropertyName, newColl, oldColl, id);
 
-		List<PersistentCollectionChangeData> mainCollectionChanges = main.mapCollectionChanges(
-				referencingPropertyName, newColl, oldColl, id);
+        List<PersistentCollectionChangeData> mainCollectionChanges = main.mapCollectionChanges(
+                referencingPropertyName, newColl, oldColl, id);
 
         if (parentCollectionChanges == null) {
             return mainCollectionChanges;
         } else {
-        	if(mainCollectionChanges != null) {
+            if (mainCollectionChanges != null) {
                 parentCollectionChanges.addAll(mainCollectionChanges);
-        	}
-			return parentCollectionChanges;
+            }
+            return parentCollectionChanges;
         }
     }
 
     public void addToAuditQuery(QueryBuilder qb) {
         parentMapper.addToAuditQuery(qb);
         main.addToAuditQuery(qb);
+    }
+
+    public void initializeInstance(Object instance, Map instanceAttributes, List queryResult, EntityInstantiator entityInstantiator) {
+        parentMapper.initializeInstance(instance, instanceAttributes, queryResult, entityInstantiator);
+        main.initializeInstance(instance, instanceAttributes, queryResult, entityInstantiator);
     }
 
     public CompositeMapperBuilder addComponent(PropertyData propertyData, String componentClassName) {

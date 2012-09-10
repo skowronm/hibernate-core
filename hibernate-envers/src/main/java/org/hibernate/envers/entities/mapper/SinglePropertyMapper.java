@@ -31,6 +31,7 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.configuration.AuditConfiguration;
+import org.hibernate.envers.entities.EntityInstantiator;
 import org.hibernate.envers.entities.PropertyData;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.reader.AuditReaderImplementor;
@@ -47,6 +48,7 @@ import java.util.Map;
 
 /**
  * TODO: diff
+ *
  * @author Adam Warski (adam at warski dot org)
  * @author Michal Skowronek (mskowr at o2 dot pl)
  */
@@ -57,7 +59,8 @@ public class SinglePropertyMapper implements PropertyMapper, SimpleMapperBuilder
         this.propertyData = propertyData;
     }
 
-    public SinglePropertyMapper() { }
+    public SinglePropertyMapper() {
+    }
 
     public void add(PropertyData propertyData) {
         if (this.propertyData != null) {
@@ -95,30 +98,30 @@ public class SinglePropertyMapper implements PropertyMapper, SimpleMapperBuilder
         }
 
         Setter setter = ReflectionTools.getSetter(obj.getClass(), propertyData);
-		Object value = data.get(propertyData.getName());
-		// We only set a null value if the field is not primite. Otherwise, we leave it intact.
-		if (value != null || !isPrimitive(setter, propertyData, obj.getClass())) {
-        	setter.set(obj, value, null);
-		}
+        Object value = data.get(propertyData.getName());
+        // We only set a null value if the field is not primite. Otherwise, we leave it intact.
+        if (value != null || !isPrimitive(setter, propertyData, obj.getClass())) {
+            setter.set(obj, value, null);
+        }
     }
 
-	private boolean isPrimitive(Setter setter, PropertyData propertyData, Class<?> cls) {
-		if (cls == null) {
-			throw new HibernateException("No field found for property: " + propertyData.getName());
-		}
+    private boolean isPrimitive(Setter setter, PropertyData propertyData, Class<?> cls) {
+        if (cls == null) {
+            throw new HibernateException("No field found for property: " + propertyData.getName());
+        }
 
-		if (setter instanceof DirectPropertyAccessor.DirectSetter) {
-			// In a direct setter, getMethod() returns null
-			// Trying to look up the field
-			try {
-				return cls.getDeclaredField(propertyData.getBeanName()).getType().isPrimitive();
-			} catch (NoSuchFieldException e) {
-				return isPrimitive(setter, propertyData, cls.getSuperclass());
-			}
-		} else {
-			return setter.getMethod().getParameterTypes()[0].isPrimitive();
-		}
-	}
+        if (setter instanceof DirectPropertyAccessor.DirectSetter) {
+            // In a direct setter, getMethod() returns null
+            // Trying to look up the field
+            try {
+                return cls.getDeclaredField(propertyData.getBeanName()).getType().isPrimitive();
+            } catch (NoSuchFieldException e) {
+                return isPrimitive(setter, propertyData, cls.getSuperclass());
+            }
+        } else {
+            return setter.getMethod().getParameterTypes()[0].isPrimitive();
+        }
+    }
 
     public List<PersistentCollectionChangeData> mapCollectionChanges(String referencingPropertyName,
                                                                      PersistentCollection newColl,
@@ -129,5 +132,9 @@ public class SinglePropertyMapper implements PropertyMapper, SimpleMapperBuilder
 
     public void addToAuditQuery(QueryBuilder qb) {
         // No adjustments are needed in case of single properties
+    }
+
+    public void initializeInstance(Object instance, Map instanceAttributes, List queryResult, EntityInstantiator entityInstantiator) {
+        // No custom initialization needed in case of single properties
     }
 }

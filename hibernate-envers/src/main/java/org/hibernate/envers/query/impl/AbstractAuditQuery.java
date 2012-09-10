@@ -68,37 +68,33 @@ public abstract class AbstractAuditQuery implements AuditQuery {
     protected final AuditReaderImplementor versionsReader;
 
     protected AbstractAuditQuery(AuditConfiguration verCfg, AuditReaderImplementor versionsReader,
-                                    Class<?> cls) {
-    	this(verCfg, versionsReader, cls, cls.getName());
+                                 Class<?> cls) {
+        this(verCfg, versionsReader, cls, cls.getName());
     }
 
-	protected AbstractAuditQuery(AuditConfiguration verCfg,
+    protected AbstractAuditQuery(AuditConfiguration verCfg,
                                  AuditReaderImplementor versionsReader, Class<?> cls, String entityName) {
-		this.verCfg = verCfg;
-		this.versionsReader = versionsReader;
+        this.verCfg = verCfg;
+        this.versionsReader = versionsReader;
 
-		criterions = new ArrayList<AuditCriterion>();
-		entityInstantiator = new EntityInstantiator(verCfg, versionsReader);
+        criterions = new ArrayList<AuditCriterion>();
+        entityInstantiator = new EntityInstantiator(verCfg, versionsReader);
 
-		entityClassName = cls.getName();
-		this.entityName = entityName;
-		versionsEntityName = verCfg.getAuditEntCfg().getAuditEntityName(
-				entityName);
+        entityClassName = cls.getName();
+        this.entityName = entityName;
+        versionsEntityName = verCfg.getAuditEntCfg().getAuditEntityName(
+                entityName);
 
 		qb = new QueryBuilder(versionsEntityName, REFERENCED_ENTITY_ALIAS);
 	}
     
     protected Query buildQuery() {
-        verCfg.getEntCfg().get(entityName).getPropertyMapper().addToAuditQuery(qb);
+        if (!hasProjection) {
+            verCfg.getEntCfg().get(entityName).getPropertyMapper().addToAuditQuery(qb);
+        }
         Query query = qb.toQuery(versionsReader.getSession());
         setQueryProperties(query);
         return query;
-    }
-    
-	protected List buildAndExecuteQuery() {
-        Query query = buildQuery();
-
-        return query.list();
     }
 
     public abstract List list() throws AuditException;
@@ -142,6 +138,11 @@ public abstract class AbstractAuditQuery implements AuditQuery {
 		String propertyName = CriteriaTools.determinePropertyName( verCfg, versionsReader, entityName, orderData.getFirst() );
         qb.addOrder(propertyName, orderData.getSecond());
         return this;
+    }
+
+    protected void initializePropertiesForInstance(Object instance, Map instanceAttributes, List queryResult, EntityInstantiator entityInstantiator) {
+        verCfg.getEntCfg().get(entityName).getPropertyMapper().initializeInstance(instance, instanceAttributes,
+                queryResult, entityInstantiator);
     }
 
     // Query properties
