@@ -106,24 +106,6 @@ public class ToOneIdMapper extends AbstractToOneMapper {
         setPropertyValue(obj, value);
     }
 
-    public void addToAuditQuery(QueryBuilder qb) {
-        // Eventually there will be logic here that joins referencedEntityName using delegate IdMapper
-        /*qb.addFrom(referencedEntityName + "_AUD", propertyData.getName() + "_relation");
-        String toOneRelationPrefix = MappingTools.createToOneRelationPrefix(propertyData.getName());
-        List<QueryParameterData> queryParameterDatas = delegate.mapToQueryParametersFromId(null);
-        Parameters rootParameters = qb.getRootParameters();
-        for (QueryParameterData queryParameterData : queryParameterDatas) {
-            String propertyName = queryParameterData.getProperty(null);
-            String referencedName =
-                    propertyData.getName() + "_relation.originalId." + propertyName.replace(toOneRelationPrefix, "");
-            rootParameters.addWhere(propertyName, true, "=", referencedName, false);
-        }
-        Parameters subParm = rootParameters.addSubParameters("or");
-        rootParameters.addWhere(propertyData.getName() + "_relation.originalId.REV", false, "<=", "originalId.REV", true);
-        subParm.addWhere(propertyData.getName() + "_relation.REVEND", false, ">", "originalId.REV", true);
-        subParm.addWhere(propertyData.getName() + "_relation.REVEND", false, "is", "null", false);*/
-    }
-
-    public void initializeInstance(Object instance, Map instanceAttributes, List queryResult, EntityInstantiator entityInstantiator) {
+    public void initializeResultEntities(List entities, List<Map> entitiesAttributes, EntityInstantiator entityInstantiator, Session session) {
     }
 }

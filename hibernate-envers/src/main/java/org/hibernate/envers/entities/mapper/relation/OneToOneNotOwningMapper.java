@@ -55,11 +55,6 @@ public class OneToOneNotOwningMapper extends AbstractOneToOneMapper {
                                            .getSingleResult();
     }
 
-    public void addToAuditQuery(QueryBuilder qb) {
-        // Eventually there will be logic here that joins one to one entity using owningEntityName and owningReferencePropertyName
-    }
-
-    public void initializeInstance(Object instance, Map instanceAttributes, List queryResult, EntityInstantiator entityInstantiator) {
-        // Eventually there will be logic here that initializes one to one relation using data from query result
+    public void initializeResultEntities(List entities, List<Map> entitiesAttributes, EntityInstantiator entityInstantiator, Session session) {
     }
 }

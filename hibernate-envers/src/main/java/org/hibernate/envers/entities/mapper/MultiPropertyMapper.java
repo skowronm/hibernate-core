@@ -190,15 +190,9 @@ public class MultiPropertyMapper implements ExtendedPropertyMapper {
 		}
 	}
 
-    public void addToAuditQuery(QueryBuilder qb) {
+    public void initializeResultEntities(List entities, List<Map> entitiesAttributes, EntityInstantiator entityInstantiator, Session session) {
         for (PropertyMapper propertyMapper : properties.values()) {
-            propertyMapper.addToAuditQuery(qb);
-        }
-    }
-
-    public void initializeInstance(Object instance, Map instanceAttributes, List queryResult, EntityInstantiator entityInstantiator) {
-        for (PropertyMapper propertyMapper : properties.values()) {
-            propertyMapper.initializeInstance(instance, instanceAttributes, queryResult, entityInstantiator);
+            propertyMapper.initializeResultEntities(entities, entitiesAttributes, entityInstantiator, session);
         }
     }
 

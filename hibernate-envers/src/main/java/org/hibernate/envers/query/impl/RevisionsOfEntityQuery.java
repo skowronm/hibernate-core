@@ -119,7 +119,9 @@ public class RevisionsOfEntityQuery extends AbstractAuditQuery {
             return query.list();
         } else {
             List queryResult = query.setResultTransformer(AliasToEntityMapResultTransformer.INSTANCE).list();
+            List results = new ArrayList();
             List entities = new ArrayList();
+            List<Map> entitiesData = extractRootEntitiesFromQueryResult(queryResult);
             String revisionTypePropertyName = verEntCfg.getRevisionTypePropName();
 
             for (Object resultRow : queryResult) {
@@ -137,16 +139,16 @@ public class RevisionsOfEntityQuery extends AbstractAuditQuery {
 
                 Object entity =
                         entityInstantiator.createInstanceFromVersionsEntity(entityName, versionsEntity, revision);
-                initializePropertiesForInstance(entity, versionsEntity, queryResult, entityInstantiator);
 
                 if (!selectEntitiesOnly) {
-                    entities.add(new Object[]{entity, revisionData, versionsEntity.get(revisionTypePropertyName)});
+                    results.add(new Object[]{entity, revisionData, versionsEntity.get(revisionTypePropertyName)});
                 } else {
-                    entities.add(entity);
+                    results.add(entity);
                 }
+                entities.add(entity);
             }
-
-            return entities;
+            initializeResultEntities(entities, entitiesData, entityInstantiator);
+            return results;
         }
     }
 }

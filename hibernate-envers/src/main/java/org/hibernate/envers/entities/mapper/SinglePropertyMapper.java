@@ -37,7 +37,6 @@ import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.reader.AuditReaderImplementor;
 import org.hibernate.envers.tools.StringTools;
 import org.hibernate.envers.tools.Tools;
-import org.hibernate.envers.tools.query.QueryBuilder;
 import org.hibernate.envers.tools.reflection.ReflectionTools;
 import org.hibernate.property.DirectPropertyAccessor;
 import org.hibernate.property.Setter;
@@ -130,11 +129,6 @@ public class SinglePropertyMapper implements PropertyMapper, SimpleMapperBuilder
         return null;
     }
 
-    public void addToAuditQuery(QueryBuilder qb) {
-        // No adjustments are needed in case of single properties
-    }
-
-    public void initializeInstance(Object instance, Map instanceAttributes, List queryResult, EntityInstantiator entityInstantiator) {
-        // No custom initialization needed in case of single properties
+    public void initializeResultEntities(List entities, List<Map> entitiesAttributes, EntityInstantiator entityInstantiator, Session session) {
     }
 }

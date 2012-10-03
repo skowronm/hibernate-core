@@ -67,8 +67,7 @@ public abstract class AbstractAuditQuery implements AuditQuery {
     protected final AuditConfiguration verCfg;
     protected final AuditReaderImplementor versionsReader;
 
-    protected AbstractAuditQuery(AuditConfiguration verCfg, AuditReaderImplementor versionsReader,
-                                 Class<?> cls) {
+    protected AbstractAuditQuery(AuditConfiguration verCfg, AuditReaderImplementor versionsReader, Class<?> cls) {
         this(verCfg, versionsReader, cls, cls.getName());
     }
 
@@ -87,11 +86,8 @@ public abstract class AbstractAuditQuery implements AuditQuery {
 
 		qb = new QueryBuilder(versionsEntityName, REFERENCED_ENTITY_ALIAS);
 	}
-    
+
     protected Query buildQuery() {
-        if (!hasProjection) {
-            verCfg.getEntCfg().get(entityName).getPropertyMapper().addToAuditQuery(qb);
-        }
         Query query = qb.toQuery(versionsReader.getSession());
         setQueryProperties(query);
         return query;
@@ -140,9 +136,18 @@ public abstract class AbstractAuditQuery implements AuditQuery {
         return this;
     }
 
-    protected void initializePropertiesForInstance(Object instance, Map instanceAttributes, List queryResult, EntityInstantiator entityInstantiator) {
-        verCfg.getEntCfg().get(entityName).getPropertyMapper().initializeInstance(instance, instanceAttributes,
-                queryResult, entityInstantiator);
+    protected void initializeResultEntities(List entities, List<Map> entitiesAttributes, EntityInstantiator entityInstantiator) {
+        verCfg.getEntCfg().get(entityName).getPropertyMapper().initializeResultEntities(entities, entitiesAttributes,
+                entityInstantiator, versionsReader.getSession());
+    }
+
+    // Each root entity is represented by a map of its attributes
+    protected List<Map> extractRootEntitiesFromQueryResult(List queryResult) {
+        Set<Map> filteredQueryResult = new LinkedHashSet<Map>();
+        for (Object queryRow : queryResult) {
+            filteredQueryResult.add((Map) ((Map) queryRow).get("e"));
+        }
+        return new ArrayList<Map>(filteredQueryResult);
     }
 
     // Query properties

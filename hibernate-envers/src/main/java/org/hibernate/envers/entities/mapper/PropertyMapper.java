@@ -77,19 +77,12 @@ public interface PropertyMapper {
 	void mapModifiedFlagsToMapForCollectionChange(String collectionPropertyName, Map<String, Object> data);
 
     /**
-     * The method allows mapper to adjust audit query before it is issued to hibernate making it possible to implement various fetching strategies
+     * The method allows mapper to further initialize properties in query results
      *
-     * @param qb QueryBuilder used by AbstractAuditQuery
-     */
-    void addToAuditQuery(QueryBuilder qb);
-
-    /**
-     * The method allows mapper to further initialize properties in instance based on query results
-     *
-     * @param instance           Instance of the root entity containing the property
-     * @param instanceAttributes Full attributes set describing root entity
-     * @param queryResult        Full result of the audit query containing all instances
+     * @param entities           List of entities
+     * @param entitiesAttributes List of maps containing individual attributes of entities. The order in list is the same as for the first parameter
      * @param entityInstantiator tool for creating class instances out of properties maps
+     * @param session            Session used for issuing additional queries
      */
-    void initializeInstance(Object instance, Map instanceAttributes, List queryResult, EntityInstantiator entityInstantiator);
+    void initializeResultEntities(List entities, List<Map> entitiesAttributes, EntityInstantiator entityInstantiator, Session session);
 }

@@ -108,25 +108,12 @@ public class EntitiesAtRevisionQuery extends AbstractAuditQuery {
             return query.list();
         } else {
             List queryResult = query.setResultTransformer(AliasToEntityMapResultTransformer.INSTANCE).list();
-            List result = new ArrayList();
-            List<Map> rootEntities = new ArrayList<Map>(extractRootEntitiesFromQueryResult(queryResult));
-            entityInstantiator.addInstancesFromVersionsEntities(entityName, result, rootEntities, revision);
-
-            Iterator<Map> rootEntitiesAttributesIt = rootEntities.iterator();
-            for (Object instance : result) {
-                Map instanceAttributes = rootEntitiesAttributesIt.next();
-                initializePropertiesForInstance(instance, instanceAttributes, queryResult, entityInstantiator);
-            }
-            return result;
+            List entities = new ArrayList();
+            List<Map> entitiesData = extractRootEntitiesFromQueryResult(queryResult);
+            entityInstantiator.addInstancesFromVersionsEntities(entityName, entities, entitiesData, revision);
+            initializeResultEntities(entities, entitiesData, entityInstantiator);
+            return entities;
         }
     }
 
-    // Each root entity is represented by a map of its attributes
-    private Set<Map> extractRootEntitiesFromQueryResult(List queryResult) {
-        Set<Map> filteredQueryResult = new LinkedHashSet<Map>();
-        for (Object queryRow : queryResult) {
-            filteredQueryResult.add((Map) ((Map) queryRow).get("e"));
-        }
-        return filteredQueryResult;
-    }
 }

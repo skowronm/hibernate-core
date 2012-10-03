@@ -77,11 +77,6 @@ public class BasicCollectionMapper<T extends Collection> extends AbstractCollect
         elementComponentData.getComponentMapper().mapToMapFromObject(data, changed);
     }
 
-    public void addToAuditQuery(QueryBuilder qb) {
-        // Eventually there will be logic here that joins collection using commonCollectionMapperData
-    }
-
-    public void initializeInstance(Object instance, Map instanceAttributes, List queryResult, EntityInstantiator entityInstantiator) {
-        // Eventually there will be logic here that initializes collection using data from query result
+    public void initializeResultEntities(List entities, List<Map> entitiesAttributes, EntityInstantiator entityInstantiator, Session session) {
     }
 }
