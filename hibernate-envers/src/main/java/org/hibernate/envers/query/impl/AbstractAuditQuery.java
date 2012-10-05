@@ -136,9 +136,9 @@ public abstract class AbstractAuditQuery implements AuditQuery {
         return this;
     }
 
-    protected void initializeResultEntities(List entities, List<Map> entitiesAttributes, EntityInstantiator entityInstantiator) {
+    protected void initializeResultEntities(List entities, List<Map> entitiesAttributes, EntityInstantiator entityInstantiator, @Nullable Number revision) {
         verCfg.getEntCfg().get(entityName).getPropertyMapper().initializeResultEntities(entities, entitiesAttributes,
-                entityInstantiator, versionsReader.getSession());
+                entityInstantiator, versionsReader.getSession(), revision);
     }
 
     // Each root entity is represented by a map of its attributes

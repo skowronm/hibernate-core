@@ -77,6 +77,6 @@ public class BasicCollectionMapper<T extends Collection> extends AbstractCollect
         elementComponentData.getComponentMapper().mapToMapFromObject(data, changed);
     }
 
-    public void initializeResultEntities(List entities, List<Map> entitiesAttributes, EntityInstantiator entityInstantiator, Session session) {
+    public void initializeResultEntities(List entities, List<Map> entitiesAttributes, EntityInstantiator entityInstantiator, Session session, Number revision) {
     }
 }

@@ -106,6 +106,6 @@ public class ToOneIdMapper extends AbstractToOneMapper {
         setPropertyValue(obj, value);
     }
 
-    public void initializeResultEntities(List entities, List<Map> entitiesAttributes, EntityInstantiator entityInstantiator, Session session) {
+    public void initializeResultEntities(List entities, List<Map> entitiesAttributes, EntityInstantiator entityInstantiator, Session session, Number revision) {
     }
 }

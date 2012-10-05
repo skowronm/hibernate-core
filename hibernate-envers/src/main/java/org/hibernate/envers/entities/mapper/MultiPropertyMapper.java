@@ -190,9 +190,10 @@ public class MultiPropertyMapper implements ExtendedPropertyMapper {
 		}
 	}
 
-    public void initializeResultEntities(List entities, List<Map> entitiesAttributes, EntityInstantiator entityInstantiator, Session session) {
+    public void initializeResultEntities(List entities, List<Map> entitiesAttributes, EntityInstantiator entityInstantiator, Session session, Number revision) {
         for (PropertyMapper propertyMapper : properties.values()) {
-            propertyMapper.initializeResultEntities(entities, entitiesAttributes, entityInstantiator, session);
+            propertyMapper.initializeResultEntities(entities, entitiesAttributes, entityInstantiator, session,
+                    revision);
         }
     }
 

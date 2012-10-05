@@ -143,7 +143,7 @@ public class ComponentPropertyMapper implements PropertyMapper, CompositeMapperB
         return delegate.mapCollectionChanges(referencingPropertyName, newColl, oldColl, id);
     }
 
-    public void initializeResultEntities(List entities, List<Map> entitiesAttributes, EntityInstantiator entityInstantiator, Session session) {
-        delegate.initializeResultEntities(entities, entitiesAttributes, entityInstantiator, session);
+    public void initializeResultEntities(List entities, List<Map> entitiesAttributes, EntityInstantiator entityInstantiator, Session session, Number revision) {
+        delegate.initializeResultEntities(entities, entitiesAttributes, entityInstantiator, session, revision);
     }
 }

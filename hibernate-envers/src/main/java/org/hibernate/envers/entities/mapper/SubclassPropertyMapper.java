@@ -99,9 +99,9 @@ public class SubclassPropertyMapper implements ExtendedPropertyMapper {
         }
     }
 
-    public void initializeResultEntities(List entities, List<Map> entitiesAttributes, EntityInstantiator entityInstantiator, Session session) {
-        parentMapper.initializeResultEntities(entities, entitiesAttributes, entityInstantiator, session);
-        main.initializeResultEntities(entities, entitiesAttributes, entityInstantiator, session);
+    public void initializeResultEntities(List entities, List<Map> entitiesAttributes, EntityInstantiator entityInstantiator, Session session, Number revision) {
+        parentMapper.initializeResultEntities(entities, entitiesAttributes, entityInstantiator, session, revision);
+        main.initializeResultEntities(entities, entitiesAttributes, entityInstantiator, session, revision);
     }
 
     public CompositeMapperBuilder addComponent(PropertyData propertyData, String componentClassName) {

@@ -147,7 +147,7 @@ public class RevisionsOfEntityQuery extends AbstractAuditQuery {
                 }
                 entities.add(entity);
             }
-            initializeResultEntities(entities, entitiesData, entityInstantiator);
+            initializeResultEntities(entities, entitiesData, entityInstantiator, null);
             return results;
         }
     }

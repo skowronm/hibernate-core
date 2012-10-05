@@ -111,7 +111,7 @@ public class EntitiesAtRevisionQuery extends AbstractAuditQuery {
             List entities = new ArrayList();
             List<Map> entitiesData = extractRootEntitiesFromQueryResult(queryResult);
             entityInstantiator.addInstancesFromVersionsEntities(entityName, entities, entitiesData, revision);
-            initializeResultEntities(entities, entitiesData, entityInstantiator);
+            initializeResultEntities(entities, entitiesData, entityInstantiator, revision);
             return entities;
         }
     }

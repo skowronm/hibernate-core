@@ -88,6 +88,6 @@ public final class ListCollectionMapper extends AbstractCollectionMapper<List> i
         indexComponentData.getComponentMapper().mapToMapFromObject(data, indexValuePair.getFirst());
     }
 
-    public void initializeResultEntities(List entities, List<Map> entitiesAttributes, EntityInstantiator entityInstantiator, Session session) {
+    public void initializeResultEntities(List entities, List<Map> entitiesAttributes, EntityInstantiator entityInstantiator, Session session, Number revision) {
     }
 }

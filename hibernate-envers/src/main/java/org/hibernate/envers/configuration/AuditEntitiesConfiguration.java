@@ -33,6 +33,7 @@ import static org.hibernate.envers.tools.Tools.getProperty;
 
 /**
  * Configuration of versions entities - names of fields, entities and tables created to store versioning information.
+ *
  * @author Adam Warski (adam at warski dot org)
  * @author Stephanie Pau at Markit Group Plc
  */
@@ -56,7 +57,7 @@ public class AuditEntitiesConfiguration {
     private final Map<String, String> customAuditTablesNames;
 
     private final String revisionEndFieldName;
-    
+
     private final boolean revisionEndTimestampEnabled;
     private final String revisionEndTimestampFieldName;
     private final boolean logAuditMappings;
@@ -69,7 +70,7 @@ public class AuditEntitiesConfiguration {
                 "org.hibernate.envers.auditTablePrefix",
                 "");
         auditTableSuffix = getProperty(properties,
-                "org.hibernate.envers.audit_table_suffix", 
+                "org.hibernate.envers.audit_table_suffix",
                 "org.hibernate.envers.auditTableSuffix",
                 "_AUD");
 
@@ -91,7 +92,7 @@ public class AuditEntitiesConfiguration {
                 "REV");
 
         revisionTypePropName = getProperty(properties,
-                "org.hibernate.envers.revision_type_field_name", 
+                "org.hibernate.envers.revision_type_field_name",
                 "org.hibernate.envers.revisionTypeFieldName",
                 "REVTYPE");
         revisionTypePropType = "byte";
@@ -102,16 +103,16 @@ public class AuditEntitiesConfiguration {
                 "REVEND");
 
         String revisionEndTimestampEnabledStr = getProperty(properties,
-        		"org.hibernate.envers.audit_strategy_validity_store_revend_timestamp",
-        		"org.hibernate.envers.audit_strategy_validity_store_revend_timestamp",
-        		"false");
+                "org.hibernate.envers.audit_strategy_validity_store_revend_timestamp",
+                "org.hibernate.envers.audit_strategy_validity_store_revend_timestamp",
+                "false");
         revisionEndTimestampEnabled = Boolean.parseBoolean(revisionEndTimestampEnabledStr);
-                
+
         if (revisionEndTimestampEnabled) {
             revisionEndTimestampFieldName = getProperty(properties,
-            		"org.hibernate.envers.audit_strategy_validity_revend_timestamp_field_name",
-            		"org.hibernate.envers.audit_strategy_validity_revend_timestamp_field_name",
-            		"REVEND_TSTMP");
+                    "org.hibernate.envers.audit_strategy_validity_revend_timestamp_field_name",
+                    "org.hibernate.envers.audit_strategy_validity_revend_timestamp_field_name",
+                    "REVEND_TSTMP");
         } else {
             revisionEndTimestampFieldName = null;
         }
@@ -136,13 +137,13 @@ public class AuditEntitiesConfiguration {
         return revisionFieldName;
     }
 
-	public boolean isRevisionEndTimestampEnabled() {
-		return revisionEndTimestampEnabled;
-	}
+    public boolean isRevisionEndTimestampEnabled() {
+        return revisionEndTimestampEnabled;
+    }
 
-	public String getRevisionEndTimestampFieldName() {
-		return revisionEndTimestampFieldName;
-	}
+    public String getRevisionEndTimestampFieldName() {
+        return revisionEndTimestampFieldName;
+    }
 
     public boolean isLogAuditMappings() {
         return logAuditMappings;
@@ -182,6 +183,10 @@ public class AuditEntitiesConfiguration {
 
     public String getAuditEntityName(String entityName) {
         return auditTablePrefix + entityName + auditTableSuffix;
+    }
+
+    public String getAuditTableSuffix() {
+        return auditTableSuffix;
     }
 
     public String getAuditTableName(String entityName, String tableName) {

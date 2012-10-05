@@ -77,6 +77,6 @@ public class MapCollectionMapper<T extends Map> extends AbstractCollectionMapper
         indexComponentData.getComponentMapper().mapToMapFromObject(data, ((Map.Entry) changed).getKey());
     }
 
-    public void initializeResultEntities(List entities, List<Map> entitiesAttributes, EntityInstantiator entityInstantiator, Session session) {
+    public void initializeResultEntities(List entities, List<Map> entitiesAttributes, EntityInstantiator entityInstantiator, Session session, Number revision) {
     }
 }

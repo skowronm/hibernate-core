@@ -129,6 +129,6 @@ public class SinglePropertyMapper implements PropertyMapper, SimpleMapperBuilder
         return null;
     }
 
-    public void initializeResultEntities(List entities, List<Map> entitiesAttributes, EntityInstantiator entityInstantiator, Session session) {
+    public void initializeResultEntities(List entities, List<Map> entitiesAttributes, EntityInstantiator entityInstantiator, Session session, Number revision) {
     }
 }

@@ -55,6 +55,6 @@ public class OneToOneNotOwningMapper extends AbstractOneToOneMapper {
                                            .getSingleResult();
     }
 
-    public void initializeResultEntities(List entities, List<Map> entitiesAttributes, EntityInstantiator entityInstantiator, Session session) {
+    public void initializeResultEntities(List entities, List<Map> entitiesAttributes, EntityInstantiator entityInstantiator, Session session, Number revision) {
     }
 }
