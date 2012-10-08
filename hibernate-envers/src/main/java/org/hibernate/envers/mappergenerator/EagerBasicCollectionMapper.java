@@ -4,7 +4,6 @@
 
 package org.hibernate.envers.mappergenerator;
 
-import com.sun.istack.internal.Nullable;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.envers.RevisionType;
@@ -267,7 +266,7 @@ public class EagerBasicCollectionMapper<T extends Collection> extends BasicColle
         return collection;
     }
 
-    private Map<Pair<Object, Integer>, List<Map>> extractElementsFromResults(List results, IdMapper idMapper, Map<Object, List<Integer>> revisionsOfEntities, @Nullable String originalId) {
+    private Map<Pair<Object, Integer>, List<Map>> extractElementsFromResults(List results, IdMapper idMapper, Map<Object, List<Integer>> revisionsOfEntities, String originalId) {
         Map<Pair<Object, Integer>, List<Map>> elementsOfEntities = new HashMap<Pair<Object, Integer>, List<Map>>();
         for (Object result : results) {
             Map resultAttr = (Map) result;
@@ -325,7 +324,7 @@ public class EagerBasicCollectionMapper<T extends Collection> extends BasicColle
         subParam.addNullRestriction(revisionEndFieldName + ".id", true);
     }
 
-    private void addIdsCriteria(QueryBuilder builder, @Nullable String originalId, List<QueryParameterData> idParameterDatas, List<List> ids) {
+    private void addIdsCriteria(QueryBuilder builder, String originalId, List<QueryParameterData> idParameterDatas, List<List> ids) {
         Parameters rootParameters = builder.getRootParameters();
         if (idParameterDatas.size() == 1) {
             rootParameters.addWhereWithParams(createLeftHand(originalId, idParameterDatas), "in (", ids.toArray(), ")",
@@ -352,7 +351,7 @@ public class EagerBasicCollectionMapper<T extends Collection> extends BasicColle
         rootParameters.addWhereWithParam(revisionTypePropName, "<>", RevisionType.DEL);
     }
 
-    private String createLeftHand(@Nullable String originalId, List<QueryParameterData> prefixedIdParameterDatas) {
+    private String createLeftHand(String originalId, List<QueryParameterData> prefixedIdParameterDatas) {
         StringBuilder leftHand = new StringBuilder();
         if (prefixedIdParameterDatas.size() > 1) {
             leftHand.append("(");
