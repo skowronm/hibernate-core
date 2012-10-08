@@ -56,7 +56,12 @@ import org.hibernate.envers.entities.mapper.relation.MiddleIdData;
 import org.hibernate.envers.entities.mapper.relation.SortedMapCollectionMapper;
 import org.hibernate.envers.entities.mapper.relation.SortedSetCollectionMapper;
 import org.hibernate.envers.entities.mapper.relation.ToOneIdMapper;
-import org.hibernate.envers.entities.mapper.relation.component.*;
+import org.hibernate.envers.entities.mapper.relation.component.MiddleDummyComponentMapper;
+import org.hibernate.envers.entities.mapper.relation.component.MiddleMapKeyIdComponentMapper;
+import org.hibernate.envers.entities.mapper.relation.component.MiddleMapKeyPropertyComponentMapper;
+import org.hibernate.envers.entities.mapper.relation.component.MiddleRelatedComponentMapper;
+import org.hibernate.envers.entities.mapper.relation.component.MiddleSimpleComponentMapper;
+import org.hibernate.envers.entities.mapper.relation.component.MiddleStraightComponentMapper;
 import org.hibernate.envers.entities.mapper.relation.query.OneAuditEntityQueryGenerator;
 import org.hibernate.envers.entities.mapper.relation.query.RelationQueryGenerator;
 import org.hibernate.envers.internal.EnversMessageLogger;
@@ -82,9 +87,11 @@ import org.hibernate.type.Type;
 
 import javax.persistence.JoinColumn;
 import java.util.Iterator;
+import java.util.Map;
 
 /**
  * Generates metadata for a collection-valued property.
+ *
  * @author Adam Warski (adam at warski dot org)
  * @author HernпїЅn Chanfreau
  */
@@ -106,11 +113,11 @@ public final class CollectionMetadataGenerator {
      */
     private final String referencedEntityName;
 
-	/**
-     * @param mainGenerator Main generator, giving access to configuration and the basic mapper.
-     * @param propertyValue Value of the collection, as mapped by Hibernate.
-     * @param currentMapper Mapper, to which the appropriate {@link org.hibernate.envers.entities.mapper.PropertyMapper}
-     * will be added.
+    /**
+     * @param mainGenerator         Main generator, giving access to configuration and the basic mapper.
+     * @param propertyValue         Value of the collection, as mapped by Hibernate.
+     * @param currentMapper         Mapper, to which the appropriate {@link org.hibernate.envers.entities.mapper.PropertyMapper}
+     *                              will be added.
      * @param referencingEntityName Name of the entity that owns this collection.
      * @param xmlMappingData In case this collection requires a middle table, additional mapping documents will
      * be created using this object.
@@ -171,7 +178,7 @@ public final class CollectionMetadataGenerator {
         String mappedBy = getMappedBy(propertyValue);
 
         IdMappingData referencedIdMapping = mainGenerator.getReferencedIdMappingData(referencingEntityName,
-                    referencedEntityName, propertyAuditingData, false);
+                referencedEntityName, propertyAuditingData, false);
         IdMappingData referencingIdMapping = referencingEntityConfiguration.getIdMappingData();
 
         // Generating the id mappers data for the referencing side of the relation.
@@ -197,11 +204,14 @@ public final class CollectionMetadataGenerator {
                 mainGenerator.getVerEntCfg(), mainGenerator.getAuditStrategy(),
                 referencingIdData, referencedEntityName, referencedIdData);
 
+        EntityConfiguration referencedConfiguration =
+                mainGenerator.getEntitiesConfigurations().get(referencedEntityName);
         // Creating common mapper data.
         CommonCollectionMapperData commonCollectionMapperData = new CommonCollectionMapperData(
-                mainGenerator.getVerEntCfg(), referencedEntityName,
+                mainGenerator.getVerEntCfg(),
+                referencedConfiguration == null ? referencedEntityName : referencedConfiguration.getVersionsEntityName(),
                 propertyAuditingData.getPropertyData(),
-                referencingIdData, queryGenerator);
+                referencingIdData, queryGenerator, referencedConfiguration == null);
 
         PropertyMapper fakeBidirectionalRelationMapper;
         PropertyMapper fakeBidirectionalRelationIndexMapper;
@@ -224,7 +234,8 @@ public final class CollectionMetadataGenerator {
             // Checking if there's an index defined. If so, adding a mapper for it.
             if (propertyAuditingData.getPositionMappedBy() != null) {
                 String positionMappedBy = propertyAuditingData.getPositionMappedBy();
-                fakeBidirectionalRelationIndexMapper = new SinglePropertyMapper(new PropertyData(positionMappedBy, null, null, null));
+                fakeBidirectionalRelationIndexMapper =
+                        new SinglePropertyMapper(new PropertyData(positionMappedBy, null, null, null));
 
                 // Also, overwriting the index component data to properly read the index.
                 indexComponentData = new MiddleComponentData(new MiddleStraightComponentMapper(positionMappedBy), 0);
@@ -247,10 +258,11 @@ public final class CollectionMetadataGenerator {
 
     /**
      * Adds mapping of the id of a related entity to the given xml mapping, prefixing the id with the given prefix.
-     * @param xmlMapping Mapping, to which to add the xml.
-     * @param prefix Prefix for the names of properties which will be prepended to properties that form the id.
+     *
+     * @param xmlMapping         Mapping, to which to add the xml.
+     * @param prefix             Prefix for the names of properties which will be prepended to properties that form the id.
      * @param columnNameIterator Iterator over the column names that will be used for properties that form the id.
-     * @param relatedIdMapping Id mapping data of the related entity.
+     * @param relatedIdMapping   Id mapping data of the related entity.
      */
     @SuppressWarnings({"unchecked"})
     private void addRelatedToXmlMapping(Element xmlMapping, String prefix,
@@ -272,6 +284,15 @@ public final class CollectionMetadataGenerator {
         }
         // Hibernate uses a middle table for mapping this relation, so we get it's name directly.
         return value.getCollectionTable().getName();
+    }
+
+    private String getHierarchyRootEntityName(String entityName, Map<String, EntityConfiguration> cfg) {
+        EntityConfiguration entityConfiguration = cfg.get(entityName);
+        String parentEntityName = entityConfiguration.getParentEntityName();
+        if (parentEntityName != null) {
+            return getHierarchyRootEntityName(parentEntityName, cfg);
+        }
+        return entityName;
     }
 
     @SuppressWarnings({"unchecked"})
@@ -296,7 +317,7 @@ public final class CollectionMetadataGenerator {
         // Generating the XML mapping for the middle entity, only if the relation isn't inverse.
         // If the relation is inverse, will be later checked by comparing middleEntityXml with null.
         Element middleEntityXml;
-        if (!propertyValue.isInverse()) {
+        if (!propertyValue.isInverse()) {            
             // Generating a unique middle entity name
             auditMiddleEntityName = mainGenerator.getAuditEntityNameRegister().createUnique(auditMiddleEntityName);
 
@@ -323,10 +344,13 @@ public final class CollectionMetadataGenerator {
 
         if (propertyValue.isInverse()) {
             // If the relation is inverse, then referencedEntityName is not null.
-            mappedBy = getMappedBy(propertyValue.getCollectionTable(), mainGenerator.getCfg().getClassMapping(referencedEntityName));
+            mappedBy = getMappedBy(propertyValue.getCollectionTable(),
+                    mainGenerator.getCfg().getClassMapping(referencedEntityName));
 
             referencingPrefixRelated = mappedBy + "_";
-            referencedPrefix = StringTools.getLastComponent(referencedEntityName);
+            String hierarchyRootEntityName =
+                    getHierarchyRootEntityName(referencedEntityName, mainGenerator.getEntitiesConfigurations());
+            referencedPrefix = StringTools.getLastComponent(hierarchyRootEntityName);
         } else {
             mappedBy = null;
 
@@ -341,9 +365,9 @@ public final class CollectionMetadataGenerator {
         // Creating a query generator builder, to which additional id data will be added, in case this collection
         // references some entities (either from the element or index). At the end, this will be used to build
         // a query generator to read the raw data collection from the middle table.
-		QueryGeneratorBuilder queryGeneratorBuilder = new QueryGeneratorBuilder(mainGenerator.getGlobalCfg(),
+        QueryGeneratorBuilder queryGeneratorBuilder = new QueryGeneratorBuilder(mainGenerator.getGlobalCfg(),
                 mainGenerator.getVerEntCfg(), mainGenerator.getAuditStrategy(), referencingIdData,
-				auditMiddleEntityName);
+                auditMiddleEntityName);
 
         // Adding the XML mapping for the referencing entity, if the relation isn't inverse.
         if (middleEntityXml != null) {
@@ -374,7 +398,7 @@ public final class CollectionMetadataGenerator {
         CommonCollectionMapperData commonCollectionMapperData = new CommonCollectionMapperData(
                 mainGenerator.getVerEntCfg(), auditMiddleEntityName,
                 propertyAuditingData.getPropertyData(),
-                referencingIdData, queryGenerator);
+                referencingIdData, queryGenerator, true);
 
         // Checking the type of the collection and adding an appropriate mapper.
         addMapper(commonCollectionMapperData, elementComponentData, indexComponentData);
@@ -414,14 +438,13 @@ public final class CollectionMetadataGenerator {
     }
 
     /**
-     *
-     * @param value Value, which should be mapped to the middle-table, either as a relation to another entity,
-     * or as a simple value.
-     * @param xmlMapping If not <code>null</code>, xml mapping for this value is added to this element.
+     * @param value                 Value, which should be mapped to the middle-table, either as a relation to another entity,
+     *                              or as a simple value.
+     * @param xmlMapping            If not <code>null</code>, xml mapping for this value is added to this element.
      * @param queryGeneratorBuilder In case <code>value</code> is a relation to another entity, information about it
-     * should be added to the given.
-     * @param prefix Prefix for proeprty names of related entities identifiers.
-     * @param joinColumns Names of columns to use in the xml mapping, if this array isn't null and has any elements.
+     *                              should be added to the given.
+     * @param prefix                Prefix for proeprty names of related entities identifiers.
+     * @param joinColumns           Names of columns to use in the xml mapping, if this array isn't null and has any elements.
      * @return Data for mapping this component.
      */
     @SuppressWarnings({"unchecked"})
@@ -458,12 +481,14 @@ public final class CollectionMetadataGenerator {
         } else {
             // Last but one parameter: collection components are always insertable
             boolean mapped = mainGenerator.getBasicMetadataGenerator().addBasic(xmlMapping,
-                    new PropertyAuditingData(prefix, "field", ModificationStore.FULL, RelationTargetAuditMode.AUDITED, null, null, false),
+                    new PropertyAuditingData(prefix, "field", ModificationStore.FULL, RelationTargetAuditMode.AUDITED,
+                            null, null, false),
                     value, null, true, true);
 
             if (mapped) {
                 // Simple values are always stored in the first item of the array returned by the query generator.
-                return new MiddleComponentData(new MiddleSimpleComponentMapper(mainGenerator.getVerEntCfg(), prefix), 0);
+                return new MiddleComponentData(new MiddleSimpleComponentMapper(mainGenerator.getVerEntCfg(), prefix),
+                        0);
             } else {
                 mainGenerator.throwUnsupportedTypeException(type, referencingEntityName, propertyName);
                 // Impossible to get here.
@@ -490,7 +515,8 @@ public final class CollectionMetadataGenerator {
         // Only if this is a relation (when there is a referenced entity).
         if (referencedEntityName != null) {
             if (propertyValue.isInverse()) {
-                referencingEntityConfiguration.addToManyMiddleNotOwningRelation(propertyName, mappedBy, referencedEntityName);
+                referencingEntityConfiguration.addToManyMiddleNotOwningRelation(propertyName, mappedBy,
+                        referencedEntityName);
             } else {
                 referencingEntityConfiguration.addToManyMiddleRelation(propertyName, referencedEntityName);
             }
@@ -498,8 +524,10 @@ public final class CollectionMetadataGenerator {
     }
 
     private Element createMiddleEntityXml(String auditMiddleTableName, String auditMiddleEntityName, String where) {
-        String schema = mainGenerator.getSchema(propertyAuditingData.getJoinTable().schema(), propertyValue.getCollectionTable());
-        String catalog = mainGenerator.getCatalog(propertyAuditingData.getJoinTable().catalog(), propertyValue.getCollectionTable());
+        String schema = mainGenerator.getSchema(propertyAuditingData.getJoinTable().schema(),
+                propertyValue.getCollectionTable());
+        String catalog = mainGenerator.getCatalog(propertyAuditingData.getJoinTable().catalog(),
+                propertyValue.getCollectionTable());
 
         Element middleEntityXml = MetadataTools.createEntity(xmlMappingData.newAdditionalMapping(),
                 new AuditTableData(auditMiddleEntityName, auditMiddleTableName, schema, catalog), null, null);

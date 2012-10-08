@@ -83,7 +83,7 @@ public interface PropertyMapper {
      * @param entitiesAttributes List of maps containing individual attributes of entities. The order in list is the same as for the first parameter
      * @param entityInstantiator tool for creating class instances out of properties maps
      * @param session            Session used for issuing additional queries
-     * @param revision
+     * @param revision           nullable field for entities at revision-type queries
      */
     void initializeResultEntities(List entities, List<Map> entitiesAttributes, EntityInstantiator entityInstantiator, Session session, Number revision);
 }

@@ -8,6 +8,7 @@ import com.sun.istack.internal.Nullable;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.envers.RevisionType;
+import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.configuration.AuditEntitiesConfiguration;
 import org.hibernate.envers.entities.EntityInstantiator;
 import org.hibernate.envers.entities.PropertyData;
@@ -20,6 +21,7 @@ import org.hibernate.envers.entities.mapper.relation.MiddleIdData;
 import org.hibernate.envers.entities.mapper.relation.component.MiddleComponentMapper;
 import org.hibernate.envers.entities.mapper.relation.component.MiddleRelatedComponentMapper;
 import org.hibernate.envers.exception.AuditException;
+import org.hibernate.envers.reader.AuditReaderImplementor;
 import org.hibernate.envers.tools.Pair;
 import org.hibernate.envers.tools.query.Parameters;
 import org.hibernate.envers.tools.query.QueryBuilder;
@@ -40,6 +42,10 @@ public class EagerBasicCollectionMapper<T extends Collection> extends BasicColle
     public EagerBasicCollectionMapper(CommonCollectionMapperData commonCollectionMapperData, Class<? extends T> collectionClass, Class<? extends T> proxyClass,
                                       MiddleComponentData elementComponentData) {
         super(commonCollectionMapperData, collectionClass, proxyClass, elementComponentData);
+    }
+
+    @Override
+    public void mapToEntityFromMap(AuditConfiguration verCfg, Object obj, Map data, Object primaryKey, AuditReaderImplementor versionsReader, Number revision) {
     }
 
     @Override
@@ -87,8 +93,7 @@ public class EagerBasicCollectionMapper<T extends Collection> extends BasicColle
             revisionsForEntity.add(revisionAsInt);
         }
 
-        if (!versionsMiddleEntityName.contains(verEntCfg.getAuditTableSuffix())) {
-            versionsMiddleEntityName = verEntCfg.getAuditEntityName(versionsMiddleEntityName);
+        if (!commonCollectionMapperData.isWithMiddleTable()) {
             originalId = null;
         }
 
@@ -108,8 +113,12 @@ public class EagerBasicCollectionMapper<T extends Collection> extends BasicColle
 
         MiddleComponentMapper elementMapper = elementComponentData.getComponentMapper();
         IdMapper elementOwnerIdMapper = prefixedMapper;
-        if (elementMapper instanceof MiddleRelatedComponentMapper && !((MiddleRelatedComponentMapper) elementMapper).getRelatedIdData().getAuditEntityName().equals(
-                versionsMiddleEntityName)) {
+        if (elementMapper instanceof MiddleRelatedComponentMapper && !(versionsMiddleEntityName.equals(
+                ((MiddleRelatedComponentMapper) elementMapper).getRelatedIdData().getAuditEntityName()))) {
+            String relatedEntityName =
+                    ((MiddleRelatedComponentMapper) elementMapper).getRelatedIdData().getEntityName();
+            String relatedAuditEntityName =
+                    ((MiddleRelatedComponentMapper) elementMapper).getRelatedIdData().getAuditEntityName();
             MiddleIdData relatedIdData = ((MiddleRelatedComponentMapper) elementMapper).getRelatedIdData();
             IdMapper prefixedElementIdMapper = relatedIdData.getPrefixedMapper();
             IdMapper elementIdMapper = relatedIdData.getOriginalMapper();
@@ -150,15 +159,51 @@ public class EagerBasicCollectionMapper<T extends Collection> extends BasicColle
             }
 
             if (!elementIds.isEmpty()) {
-                QueryBuilder eeBuilder = new QueryBuilder(relatedIdData.getAuditEntityName(), "ee");
-                addIdsCriteria(eeBuilder, originalId, originalParameterDatas, elementIds);
-                addRevisionCriteria(eeBuilder, elementMinimumRev, elementMaximumRev);
-                addRevTypeCriteria(eeBuilder);
-                Query elementQuery = eeBuilder.toQuery(session);
-                List elementResults = elementQuery.list();
-                actualElementsOfEntities =
-                        extractElementsFromResults(elementResults, elementIdMapper, elementRevisions, originalId);
-                elementOwnerIdMapper = prefixedElementIdMapper;
+                if (relatedAuditEntityName != null) {
+                    QueryBuilder eeBuilder = new QueryBuilder(relatedAuditEntityName, "ee");
+                    addIdsCriteria(eeBuilder, originalId, originalParameterDatas, elementIds);
+                    addRevisionCriteria(eeBuilder, elementMinimumRev, elementMaximumRev);
+                    addRevTypeCriteria(eeBuilder);
+                    Query elementQuery = eeBuilder.toQuery(session);
+                    List elementResults = elementQuery.list();
+                    actualElementsOfEntities =
+                            extractElementsFromResults(elementResults, elementIdMapper, elementRevisions, originalId);
+                    elementOwnerIdMapper = prefixedElementIdMapper;
+                } else { // target - collection element is not audited
+                    QueryBuilder eeBuilder = new QueryBuilder(relatedEntityName, "ee");
+                    addIdsCriteria(eeBuilder, null, originalParameterDatas, elementIds);
+                    Query elementQuery = eeBuilder.toQuery(session);
+                    List elementResults = elementQuery.list();
+                    Map elementsById = new HashMap();
+
+                    for (Object result : elementResults) {
+                        Object id = elementIdMapper.mapToIdFromEntity(result);
+                        elementsById.put(id, result);
+                    }
+
+                    for (Map.Entry<Pair<Object, Integer>, Object> entry : entitiesByIdAndRevision.entrySet()) {
+                        Pair<Object, Integer> idRev = entry.getKey();
+                        Object entity = entry.getValue();
+
+                        T collection = setupCollection(entity);
+
+                        List<Map> elements = elementsOfEntities.get(idRev);
+                        if (elements == null) {
+                            continue;
+                        }
+                        for (Map element : elements) {
+                            Object elementId;
+                            if (originalId != null) {
+                                elementId = prefixedElementIdMapper.mapToIdFromMap((Map) element.get(originalId));
+                            } else {
+                                elementId = prefixedElementIdMapper.mapToIdFromMap(element);
+                            }
+                            Object e = elementsById.get(elementId);
+                            collection.add(e);
+                        }
+                    }
+                    return;
+                }
             }
         }
 
@@ -282,8 +327,23 @@ public class EagerBasicCollectionMapper<T extends Collection> extends BasicColle
 
     private void addIdsCriteria(QueryBuilder builder, @Nullable String originalId, List<QueryParameterData> idParameterDatas, List<List> ids) {
         Parameters rootParameters = builder.getRootParameters();
-        rootParameters.addWhereWithParams(createLeftHand(originalId, idParameterDatas), "in (", ids.toArray(), ")",
-                false);
+        if (idParameterDatas.size() == 1) {
+            rootParameters.addWhereWithParams(createLeftHand(originalId, idParameterDatas), "in (", ids.toArray(), ")",
+                    false);
+        } else {
+            Parameters or = rootParameters.addSubParameters("or");
+            for (List idProps : ids) {
+                Parameters and = or.addSubParameters("and");
+                Iterator idProp = idProps.iterator();
+                for (QueryParameterData idParameterData : idParameterDatas) {
+                    String property = idParameterData.getProperty(null);
+                    if (originalId != null) {
+                        property = originalId + "." + property;
+                    }
+                    and.addWhereWithParam(property, "=", idProp.next());
+                }
+            }
+        }
     }
 
     private void addRevTypeCriteria(QueryBuilder builder) {
