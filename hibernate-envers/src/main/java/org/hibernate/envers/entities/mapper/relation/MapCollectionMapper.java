@@ -33,6 +33,7 @@ import org.hibernate.envers.entities.EntityInstantiator;
 import org.hibernate.envers.entities.mapper.PropertyMapper;
 import org.hibernate.envers.entities.mapper.relation.lazy.initializor.Initializor;
 import org.hibernate.envers.entities.mapper.relation.lazy.initializor.MapCollectionInitializor;
+import org.hibernate.envers.query.impl.InitializationContext;
 import org.hibernate.envers.reader.AuditReaderImplementor;
 
 /**
@@ -77,6 +78,6 @@ public class MapCollectionMapper<T extends Map> extends AbstractCollectionMapper
         indexComponentData.getComponentMapper().mapToMapFromObject(data, ((Map.Entry) changed).getKey());
     }
 
-    public void initializeResultEntities(List entities, List<Map> entitiesAttributes, EntityInstantiator entityInstantiator, Session session, Number revision) {
+    public void initializeResultEntities(List entities, List<Map> entitiesAttributes, EntityInstantiator entityInstantiator, Session session, Number revision, AuditConfiguration verCfg, InitializationContext initializationContext) {
     }
 }

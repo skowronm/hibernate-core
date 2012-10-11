@@ -34,6 +34,7 @@ import org.hibernate.envers.entities.mapper.PropertyMapper;
 import org.hibernate.envers.entities.mapper.relation.lazy.initializor.Initializor;
 import org.hibernate.envers.entities.mapper.relation.lazy.initializor.ListCollectionInitializor;
 import org.hibernate.envers.entities.mapper.relation.lazy.proxy.ListProxy;
+import org.hibernate.envers.query.impl.InitializationContext;
 import org.hibernate.envers.reader.AuditReaderImplementor;
 import org.hibernate.envers.tools.Pair;
 import org.hibernate.envers.tools.Tools;
@@ -88,6 +89,6 @@ public final class ListCollectionMapper extends AbstractCollectionMapper<List> i
         indexComponentData.getComponentMapper().mapToMapFromObject(data, indexValuePair.getFirst());
     }
 
-    public void initializeResultEntities(List entities, List<Map> entitiesAttributes, EntityInstantiator entityInstantiator, Session session, Number revision) {
+    public void initializeResultEntities(List entities, List<Map> entitiesAttributes, EntityInstantiator entityInstantiator, Session session, Number revision, AuditConfiguration verCfg, InitializationContext initializationContext) {
     }
 }

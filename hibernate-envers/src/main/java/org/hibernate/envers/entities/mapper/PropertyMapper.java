@@ -79,11 +79,13 @@ public interface PropertyMapper {
     /**
      * The method allows mapper to further initialize properties in query results
      *
-     * @param entities           List of entities
-     * @param entitiesAttributes List of maps containing individual attributes of entities. The order in list is the same as for the first parameter
-     * @param entityInstantiator tool for creating class instances out of properties maps
-     * @param session            Session used for issuing additional queries
-     * @param revision           nullable field for entities at revision-type queries
+     * @param entities              List of entities
+     * @param entitiesAttributes    List of maps containing individual attributes of entities. The order in list is the same as for the first parameter
+     * @param entityInstantiator    tool for creating class instances out of properties maps
+     * @param session               Session used for issuing additional queries
+     * @param revision              nullable field for entities at revision-type queries
+     * @param verCfg                AuditConfiguration providing configuration info for audit entities
+     * @param initializationContext class that stores already initialized (or being initialized) instances
      */
-    void initializeResultEntities(List entities, List<Map> entitiesAttributes, EntityInstantiator entityInstantiator, Session session, Number revision);
+    void initializeResultEntities(List entities, List<Map> entitiesAttributes, EntityInstantiator entityInstantiator, Session session, Number revision, AuditConfiguration verCfg, InitializationContext initializationContext);
 }

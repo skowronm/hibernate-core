@@ -30,6 +30,7 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.entities.PropertyData;
+import org.hibernate.envers.query.impl.InitializationContext;
 import org.hibernate.envers.reader.AuditReaderImplementor;
 import org.hibernate.envers.tools.MappingTools;
 import org.hibernate.envers.tools.Pair;
@@ -190,10 +191,10 @@ public class MultiPropertyMapper implements ExtendedPropertyMapper {
 		}
 	}
 
-    public void initializeResultEntities(List entities, List<Map> entitiesAttributes, EntityInstantiator entityInstantiator, Session session, Number revision) {
+    public void initializeResultEntities(List entities, List<Map> entitiesAttributes, EntityInstantiator entityInstantiator, Session session, Number revision, AuditConfiguration verCfg, InitializationContext initializationContext) {
         for (PropertyMapper propertyMapper : properties.values()) {
             propertyMapper.initializeResultEntities(entities, entitiesAttributes, entityInstantiator, session,
-                    revision);
+                    revision, verCfg, initializationContext);
         }
     }
 

@@ -138,7 +138,7 @@ public abstract class AbstractAuditQuery implements AuditQuery {
 
     protected void initializeResultEntities(List entities, List<Map> entitiesAttributes, EntityInstantiator entityInstantiator, Number revision) {
         verCfg.getEntCfg().get(entityName).getPropertyMapper().initializeResultEntities(entities, entitiesAttributes,
-                entityInstantiator, versionsReader.getSession(), revision);
+                entityInstantiator, versionsReader.getSession(), revision, verCfg, new InitializationContext());
     }
 
     // Each root entity is represented by a map of its attributes

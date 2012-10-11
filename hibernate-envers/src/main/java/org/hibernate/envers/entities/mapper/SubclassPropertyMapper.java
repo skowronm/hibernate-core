@@ -30,6 +30,7 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.entities.PropertyData;
+import org.hibernate.envers.query.impl.InitializationContext;
 import org.hibernate.envers.reader.AuditReaderImplementor;
 
 /**
@@ -99,9 +100,11 @@ public class SubclassPropertyMapper implements ExtendedPropertyMapper {
         }
     }
 
-    public void initializeResultEntities(List entities, List<Map> entitiesAttributes, EntityInstantiator entityInstantiator, Session session, Number revision) {
-        parentMapper.initializeResultEntities(entities, entitiesAttributes, entityInstantiator, session, revision);
-        main.initializeResultEntities(entities, entitiesAttributes, entityInstantiator, session, revision);
+    public void initializeResultEntities(List entities, List<Map> entitiesAttributes, EntityInstantiator entityInstantiator, Session session, Number revision, AuditConfiguration verCfg, InitializationContext initializationContext) {
+        parentMapper.initializeResultEntities(entities, entitiesAttributes, entityInstantiator, session, revision,
+                verCfg, initializationContext);
+        main.initializeResultEntities(entities, entitiesAttributes, entityInstantiator, session, revision, verCfg,
+                initializationContext);
     }
 
     public CompositeMapperBuilder addComponent(PropertyData propertyData, String componentClassName) {

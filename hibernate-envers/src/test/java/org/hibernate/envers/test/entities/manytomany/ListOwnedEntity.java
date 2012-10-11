@@ -29,8 +29,6 @@ import javax.persistence.ManyToMany;
 import javax.persistence.Table;
 import java.util.List;
 
-import org.hibernate.envers.Audited;
-
 /**
  * Many-to-many not-owning entity
  *
@@ -112,7 +110,7 @@ public class ListOwnedEntity {
 		return result;
 	}
 
-	public String toString() {
-		return "SetOwnedEntity(id = " + id + ", data = " + data + ")";
-	}
+    public String toString() {
+        return "ListOwnedEntity(id = " + id + ", data = " + data + ")";
+    }
 }

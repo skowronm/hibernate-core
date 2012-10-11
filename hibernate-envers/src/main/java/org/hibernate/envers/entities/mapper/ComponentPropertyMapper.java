@@ -34,6 +34,7 @@ import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.entities.EntityInstantiator;
 import org.hibernate.envers.entities.PropertyData;
 import org.hibernate.envers.exception.AuditException;
+import org.hibernate.envers.query.impl.InitializationContext;
 import org.hibernate.envers.reader.AuditReaderImplementor;
 import org.hibernate.envers.tools.reflection.ReflectionTools;
 import org.hibernate.internal.util.ReflectHelper;
@@ -143,7 +144,8 @@ public class ComponentPropertyMapper implements PropertyMapper, CompositeMapperB
         return delegate.mapCollectionChanges(referencingPropertyName, newColl, oldColl, id);
     }
 
-    public void initializeResultEntities(List entities, List<Map> entitiesAttributes, EntityInstantiator entityInstantiator, Session session, Number revision) {
-        delegate.initializeResultEntities(entities, entitiesAttributes, entityInstantiator, session, revision);
+    public void initializeResultEntities(List entities, List<Map> entitiesAttributes, EntityInstantiator entityInstantiator, Session session, Number revision, AuditConfiguration verCfg, InitializationContext initializationContext) {
+        delegate.initializeResultEntities(entities, entitiesAttributes, entityInstantiator, session, revision, verCfg,
+                initializationContext);
     }
 }
