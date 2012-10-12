@@ -25,17 +25,16 @@ package org.hibernate.envers.entities.mapper.relation;
 
 import org.hibernate.envers.entities.PropertyData;
 import org.hibernate.envers.query.AuditEntity;
-import org.hibernate.envers.query.impl.InitializationContext;
 import org.hibernate.envers.reader.AuditReaderImplementor;
-import org.hibernate.envers.tools.query.QueryBuilder;
 
 import java.io.Serializable;
 
 /**
  * Property mapper for not owning side of {@link OneToOne} relation.
+ *
  * @author Adam Warski (adam at warski dot org)
  * @author HernпїЅn Chanfreau
- * @author Michal Skowronek (mskowr at o2 dot pl)  
+ * @author Michal Skowronek (mskowr at o2 dot pl)
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 public class OneToOneNotOwningMapper extends AbstractOneToOneMapper {
@@ -51,11 +50,9 @@ public class OneToOneNotOwningMapper extends AbstractOneToOneMapper {
     protected Object queryForReferencedEntity(AuditReaderImplementor versionsReader, EntityInfo referencedEntity,
                                               Serializable primaryKey, Number revision) {
         return versionsReader.createQuery().forEntitiesAtRevision(referencedEntity.getEntityClass(),
-                                                                  referencedEntity.getEntityName(), revision)
-                                           .add(AuditEntity.relatedId(owningReferencePropertyName).eq(primaryKey))
-                                           .getSingleResult();
+                referencedEntity.getEntityName(), revision)
+                .add(AuditEntity.relatedId(owningReferencePropertyName).eq(primaryKey))
+                .getSingleResult();
     }
 
-    public void initializeResultEntities(List entities, List<Map> entitiesAttributes, EntityInstantiator entityInstantiator, Session session, Number revision, AuditConfiguration verCfg, InitializationContext initializationContext) {
-    }
 }

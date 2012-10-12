@@ -23,10 +23,7 @@
  */
 package org.hibernate.envers.entities.mapper.relation;
 
-import java.io.Serializable;
-import java.util.Collection;
-import java.util.Map;
-
+import org.hibernate.Session;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.entities.EntityInstantiator;

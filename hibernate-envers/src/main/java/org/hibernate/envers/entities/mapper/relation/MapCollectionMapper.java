@@ -23,10 +23,7 @@
  */
 package org.hibernate.envers.entities.mapper.relation;
 
-import java.io.Serializable;
-import java.util.Collection;
-import java.util.Map;
-
+import org.hibernate.Session;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.entities.EntityInstantiator;
@@ -35,6 +32,11 @@ import org.hibernate.envers.entities.mapper.relation.lazy.initializor.Initializo
 import org.hibernate.envers.entities.mapper.relation.lazy.initializor.MapCollectionInitializor;
 import org.hibernate.envers.query.impl.InitializationContext;
 import org.hibernate.envers.reader.AuditReaderImplementor;
+
+import java.io.Serializable;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author Adam Warski (adam at warski dot org)

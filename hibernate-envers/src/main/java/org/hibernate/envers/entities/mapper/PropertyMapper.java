@@ -22,14 +22,18 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.entities.mapper;
-import java.io.Serializable;
-import java.util.List;
-import java.util.Map;
 
+import org.hibernate.Session;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.configuration.AuditConfiguration;
+import org.hibernate.envers.entities.EntityInstantiator;
+import org.hibernate.envers.query.impl.InitializationContext;
 import org.hibernate.envers.reader.AuditReaderImplementor;
+
+import java.io.Serializable;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -73,8 +77,9 @@ public interface PropertyMapper {
                                                               PersistentCollection newColl,
                                                               Serializable oldColl, Serializable id);
 
-	void mapModifiedFlagsToMapFromEntity(SessionImplementor session, Map<String, Object> data, Object newObj, Object oldObj);
-	void mapModifiedFlagsToMapForCollectionChange(String collectionPropertyName, Map<String, Object> data);
+    void mapModifiedFlagsToMapFromEntity(SessionImplementor session, Map<String, Object> data, Object newObj, Object oldObj);
+
+    void mapModifiedFlagsToMapForCollectionChange(String collectionPropertyName, Map<String, Object> data);
 
     /**
      * The method allows mapper to further initialize properties in query results

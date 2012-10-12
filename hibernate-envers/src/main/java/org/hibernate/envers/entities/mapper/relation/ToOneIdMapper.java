@@ -23,19 +23,19 @@
  */
 package org.hibernate.envers.entities.mapper.relation;
 
-import java.io.Serializable;
-import java.util.HashMap;
-import java.util.Map;
-
+import org.hibernate.Session;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.configuration.AuditConfiguration;
+import org.hibernate.envers.entities.EntityInstantiator;
 import org.hibernate.envers.entities.PropertyData;
 import org.hibernate.envers.entities.mapper.id.IdMapper;
-import org.hibernate.envers.entities.mapper.relation.lazy.ToOneDelegateSessionImplementor;
 import org.hibernate.envers.query.impl.InitializationContext;
 import org.hibernate.envers.reader.AuditReaderImplementor;
 import org.hibernate.envers.tools.Tools;
-import org.hibernate.persister.entity.EntityPersister;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author Adam Warski (adam at warski dot org)

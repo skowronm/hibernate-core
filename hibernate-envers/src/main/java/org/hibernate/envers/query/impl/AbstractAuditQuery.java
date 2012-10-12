@@ -23,11 +23,6 @@
  */
 package org.hibernate.envers.query.impl;
 
-import java.util.ArrayList;
-import java.util.List;
-import javax.persistence.NoResultException;
-import javax.persistence.NonUniqueResultException;
-
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.LockMode;
@@ -45,6 +40,14 @@ import org.hibernate.envers.reader.AuditReaderImplementor;
 import org.hibernate.envers.tools.Pair;
 import org.hibernate.envers.tools.Triple;
 import org.hibernate.envers.tools.query.QueryBuilder;
+
+import javax.persistence.NoResultException;
+import javax.persistence.NonUniqueResultException;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import static org.hibernate.envers.entities.mapper.relation.query.QueryConstants.REFERENCED_ENTITY_ALIAS;
 
@@ -84,8 +87,8 @@ public abstract class AbstractAuditQuery implements AuditQuery {
         versionsEntityName = verCfg.getAuditEntCfg().getAuditEntityName(
                 entityName);
 
-		qb = new QueryBuilder(versionsEntityName, REFERENCED_ENTITY_ALIAS);
-	}
+        qb = new QueryBuilder(versionsEntityName, REFERENCED_ENTITY_ALIAS);
+    }
 
     protected Query buildQuery() {
         Query query = qb.toQuery(versionsReader.getSession());
@@ -145,7 +148,7 @@ public abstract class AbstractAuditQuery implements AuditQuery {
     protected List<Map> extractRootEntitiesFromQueryResult(List queryResult) {
         Set<Map> filteredQueryResult = new LinkedHashSet<Map>();
         for (Object queryRow : queryResult) {
-            filteredQueryResult.add((Map) ((Map) queryRow).get("e"));
+            filteredQueryResult.add((Map) ((Map) queryRow).get(REFERENCED_ENTITY_ALIAS));
         }
         return new ArrayList<Map>(filteredQueryResult);
     }
@@ -202,26 +205,29 @@ public abstract class AbstractAuditQuery implements AuditQuery {
         return this;
     }
 
-	/**
-	 * Set lock mode
-	 * @param lockMode The {@link LockMode} used for this query.
-	 * @return this object
-	 * @deprecated Instead use setLockOptions
-	 */
+    /**
+     * Set lock mode
+     *
+     * @param lockMode The {@link LockMode} used for this query.
+     * @return this object
+     * @deprecated Instead use setLockOptions
+     */
     public AuditQuery setLockMode(LockMode lockMode) {
         lockOptions.setLockMode(lockMode);
         return this;
     }
 
-	/**
-	 * Set lock options
-	 * @param lockOptions The @{link LockOptions} used for this query.
-	 * @return this object
-	 */
-	public AuditQuery setLockOptions(LockOptions lockOptions) {
-		LockOptions.copy(lockOptions, this.lockOptions);
-		return this;
-	}
+    /**
+     * Set lock options
+     *
+     * @param lockOptions The @{link LockOptions} used for this query.
+     * @return this object
+     */
+    public AuditQuery setLockOptions(LockOptions lockOptions) {
+        LockOptions.copy(lockOptions, this.lockOptions);
+        return this;
+    }
+
     protected void setQueryProperties(Query query) {
         if (maxResults != null) query.setMaxResults(maxResults);
         if (firstResult != null) query.setFirstResult(firstResult);
@@ -232,7 +238,7 @@ public abstract class AbstractAuditQuery implements AuditQuery {
         if (cacheMode != null) query.setCacheMode(cacheMode);
         if (timeout != null) query.setTimeout(timeout);
         if (lockOptions != null && lockOptions.getLockMode() != LockMode.NONE) {
-			  query.setLockMode(REFERENCED_ENTITY_ALIAS, lockOptions.getLockMode());
-		  }
+            query.setLockMode(REFERENCED_ENTITY_ALIAS, lockOptions.getLockMode());
+        }
     }
 }

@@ -22,13 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.configuration;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.Writer;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
 
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
@@ -36,7 +29,6 @@ import org.dom4j.Element;
 import org.dom4j.io.DOMWriter;
 import org.dom4j.io.OutputFormat;
 import org.dom4j.io.XMLWriter;
-
 import org.hibernate.MappingException;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.cfg.Configuration;
@@ -109,9 +101,9 @@ public class EntitiesConfigurator {
                 }
 
                 auditMetaGen.generateFirstPass(pc, auditData, xmlMappingData, true);
-			} else {
-				auditMetaGen.generateFirstPass(pc, auditData, xmlMappingData, false);
-			}
+            } else {
+                auditMetaGen.generateFirstPass(pc, auditData, xmlMappingData, false);
+            }
 
             xmlMappings.put(pc, xmlMappingData);
         }
@@ -143,7 +135,7 @@ public class EntitiesConfigurator {
         // Only if there are any versioned classes
         if (auditMetaGen.getEntitiesConfigurations().size() > 0) {
             try {
-                if (revisionInfoXmlMapping !=  null) {
+                if (revisionInfoXmlMapping != null) {
                     if (verEntCfg.isLogAuditMappings()) {
                         writeDocument(revisionInfoXmlMapping);
                     }
@@ -154,8 +146,8 @@ public class EntitiesConfigurator {
             }
         }
 
-		return new EntitiesConfigurations(auditMetaGen.getEntitiesConfigurations(),
-				auditMetaGen.getNotAuditedEntitiesConfigurations());
+        return new EntitiesConfigurations(auditMetaGen.getEntitiesConfigurations(),
+                auditMetaGen.getNotAuditedEntitiesConfigurations());
     }
 
     @SuppressWarnings({"UnusedDeclaration"})

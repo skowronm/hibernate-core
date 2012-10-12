@@ -22,6 +22,10 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.tools.query;
+
+import org.hibernate.envers.tools.MutableBoolean;
+import org.hibernate.envers.tools.MutableInteger;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;

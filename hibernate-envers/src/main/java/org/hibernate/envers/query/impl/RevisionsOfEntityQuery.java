@@ -22,10 +22,8 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.query.impl;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 
+import org.hibernate.Query;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.configuration.AuditEntitiesConfiguration;
@@ -38,6 +36,8 @@ import org.hibernate.transform.AliasToEntityMapResultTransformer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
+import static org.hibernate.envers.entities.mapper.relation.query.QueryConstants.REFERENCED_ENTITY_ALIAS;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -128,7 +128,8 @@ public class RevisionsOfEntityQuery extends AbstractAuditQuery {
                 Map versionsEntity;
                 Object revisionData;
 
-                versionsEntity = (Map) ((Map) resultRow).get("e");
+                versionsEntity = (Map) ((Map) resultRow).get(REFERENCED_ENTITY_ALIAS);
+
                 if (selectEntitiesOnly) {
                     revisionData = null;
                 } else {

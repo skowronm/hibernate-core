@@ -32,6 +32,11 @@ import org.hibernate.envers.query.criteria.AuditCriterion;
 import org.hibernate.envers.reader.AuditReaderImplementor;
 import org.hibernate.transform.AliasToEntityMapResultTransformer;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+
 import static org.hibernate.envers.entities.mapper.relation.query.QueryConstants.REFERENCED_ENTITY_ALIAS;
 import static org.hibernate.envers.entities.mapper.relation.query.QueryConstants.REFERENCED_ENTITY_ALIAS_DEF_AUD_STR;
 import static org.hibernate.envers.entities.mapper.relation.query.QueryConstants.REVISION_PARAMETER;
@@ -85,12 +90,13 @@ public class EntitiesAtRevisionQuery extends AbstractAuditQuery {
 
         // (selecting e entities at revision :revision)
         // --> based on auditStrategy (see above)
-        verCfg.getAuditStrategy().addEntityAtRevisionRestriction(verCfg.getGlobalCfg(), qb, revisionPropertyPath, 
-        		verEntCfg.getRevisionEndFieldName(), true, referencedIdData, 
-				revisionPropertyPath, originalIdPropertyName, REFERENCED_ENTITY_ALIAS, REFERENCED_ENTITY_ALIAS_DEF_AUD_STR);
-        
-         // e.revision_type != DEL
-         qb.getRootParameters().addWhereWithParam(verEntCfg.getRevisionTypePropName(), "<>", RevisionType.DEL);
+        verCfg.getAuditStrategy().addEntityAtRevisionRestriction(verCfg.getGlobalCfg(), qb, revisionPropertyPath,
+                verEntCfg.getRevisionEndFieldName(), true, referencedIdData,
+                revisionPropertyPath, originalIdPropertyName, REFERENCED_ENTITY_ALIAS,
+                REFERENCED_ENTITY_ALIAS_DEF_AUD_STR);
+
+        // e.revision_type != DEL
+        qb.getRootParameters().addWhereWithParam(verEntCfg.getRevisionTypePropName(), "<>", RevisionType.DEL);
 
         // all specified conditions
         for (AuditCriterion criterion : criterions) {

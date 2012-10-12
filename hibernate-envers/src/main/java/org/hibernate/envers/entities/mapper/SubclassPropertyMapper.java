@@ -22,16 +22,19 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.entities.mapper;
-import java.io.Serializable;
-import java.util.List;
-import java.util.Map;
 
+import org.hibernate.Session;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.configuration.AuditConfiguration;
+import org.hibernate.envers.entities.EntityInstantiator;
 import org.hibernate.envers.entities.PropertyData;
 import org.hibernate.envers.query.impl.InitializationContext;
 import org.hibernate.envers.reader.AuditReaderImplementor;
+
+import java.io.Serializable;
+import java.util.List;
+import java.util.Map;
 
 /**
  * A mapper which maps from a parent mapper and a "main" one, but adds only to the "main". The "main" mapper
@@ -63,27 +66,27 @@ public class SubclassPropertyMapper implements ExtendedPropertyMapper {
         return parentDiffs || mainDiffs;
     }
 
-	@Override
-	public void mapModifiedFlagsToMapFromEntity(SessionImplementor session, Map<String, Object> data, Object newObj, Object oldObj) {
-		parentMapper.mapModifiedFlagsToMapFromEntity(session, data, newObj, oldObj);
+    @Override
+    public void mapModifiedFlagsToMapFromEntity(SessionImplementor session, Map<String, Object> data, Object newObj, Object oldObj) {
+        parentMapper.mapModifiedFlagsToMapFromEntity(session, data, newObj, oldObj);
         main.mapModifiedFlagsToMapFromEntity(session, data, newObj, oldObj);
-	}
+    }
 
-	@Override
-	public void mapModifiedFlagsToMapForCollectionChange(String collectionPropertyName, Map<String, Object> data) {
-		parentMapper.mapModifiedFlagsToMapForCollectionChange(collectionPropertyName, data);
-		main.mapModifiedFlagsToMapForCollectionChange(collectionPropertyName, data);
-	}
+    @Override
+    public void mapModifiedFlagsToMapForCollectionChange(String collectionPropertyName, Map<String, Object> data) {
+        parentMapper.mapModifiedFlagsToMapForCollectionChange(collectionPropertyName, data);
+        main.mapModifiedFlagsToMapForCollectionChange(collectionPropertyName, data);
+    }
 
-	public void mapToEntityFromMap(AuditConfiguration verCfg, Object obj, Map data, Object primaryKey, AuditReaderImplementor versionsReader, Number revision) {
+    public void mapToEntityFromMap(AuditConfiguration verCfg, Object obj, Map data, Object primaryKey, AuditReaderImplementor versionsReader, Number revision) {
         parentMapper.mapToEntityFromMap(verCfg, obj, data, primaryKey, versionsReader, revision);
         main.mapToEntityFromMap(verCfg, obj, data, primaryKey, versionsReader, revision);
     }
 
     public List<PersistentCollectionChangeData> mapCollectionChanges(String referencingPropertyName,
-                                                                                    PersistentCollection newColl,
-                                                                                    Serializable oldColl,
-                                                                                    Serializable id) {
+                                                                     PersistentCollection newColl,
+                                                                     Serializable oldColl,
+                                                                     Serializable id) {
         List<PersistentCollectionChangeData> parentCollectionChanges = parentMapper.mapCollectionChanges(
                 referencingPropertyName, newColl, oldColl, id);
 
