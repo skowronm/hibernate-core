@@ -1,4 +1,4 @@
-package org.hibernate.envers.query.impl;
+package org.hibernate.envers.query.internal.impl;
 
 import org.hibernate.envers.tools.Pair;
 
